@@ -1,0 +1,33 @@
+{
+	"name": "finsight-ai-backend",
+	"version": "1.0.0",
+	"description": "FinSight AI Backend - RAG-Driven Personal Finance Manager",
+	"main": "src/server.ts",
+	"module": "src/server.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --watch src/server.ts",
+		"start": "bun run src/server.ts",
+		"build": "tsc"
+	},
+	"private": true,
+	"devDependencies": {
+		"@types/bcryptjs": "^3.0.0",
+		"@types/bun": "latest",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
+		"@types/jsonwebtoken": "^9.0.10"
+	},
+	"peerDependencies": {
+		"typescript": "^6.0.2"
+	},
+	"dependencies": {
+		"bcryptjs": "^3.0.3",
+		"cors": "^2.8.6",
+		"dotenv": "^17.4.1",
+		"express": "^5.2.1",
+		"express-validator": "^7.3.2",
+		"jsonwebtoken": "^9.0.3",
+		"mongoose": "^9.4.1"
+	}
+}
