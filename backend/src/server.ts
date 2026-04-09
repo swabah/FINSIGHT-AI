@@ -3,8 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/database";
 import { seedCategories } from "./utils/seedCategories";
+import { initializeVectorStore } from "./services/vectorStoreService";
 import authRoutes from "./routes/authRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
+import chatRoutes from "./routes/chatRoutes";
 import { notFound, errorHandler } from "./middleware/errorHandler";
 
 // Load environment variables
@@ -18,6 +20,9 @@ connectDB();
 
 // Seed default categories after database connection
 seedCategories();
+
+// Initialize Vector Store for RAG pipeline
+initializeVectorStore();
 
 // Middleware
 app.use(cors());
@@ -36,6 +41,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

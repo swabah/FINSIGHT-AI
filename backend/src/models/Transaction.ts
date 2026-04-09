@@ -59,7 +59,7 @@ TransactionSchema.index({ user_id: 1, date: -1 });
 TransactionSchema.index({ category: 1 });
 
 // Virtual getter for formatted amount with currency symbol
-TransactionSchema.virtual("formattedAmount").get(function () {
+TransactionSchema.virtual("formattedAmount").get(function (this: ITransaction) {
 	const sign = this.type === "income" ? "+" : "-";
 	return `${sign}₹${this.amount.toFixed(2)}`;
 });
