@@ -6,6 +6,7 @@ import {
 	getTransactions,
 	updateTransaction,
 	deleteTransaction,
+	getCategories,
 } from "../controllers/transactionController";
 
 const router = Router();
@@ -58,6 +59,7 @@ const updateTransactionValidation = [
 router.use(protect);
 
 // Routes
+router.get("/categories", getCategories);
 router.post("/", createTransactionValidation, createTransaction);
 router.get("/", getTransactions);
 router.put("/:id", updateTransactionValidation, updateTransaction);

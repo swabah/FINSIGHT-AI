@@ -257,3 +257,39 @@ export const deleteTransaction = async (
 		});
 	}
 };
+
+// @desc    Get all categories
+// @route   GET /api/transactions/categories
+// @access  Private
+export const getCategories = async (
+	req: Request,
+	res: Response,
+): Promise<void> => {
+	try {
+		const { type } = req.query;
+
+		// Build query filter
+		const query: any = { is_active: true };
+
+		// Add optional type filter
+		if (type && ["income", "expense"].includes(type as string)) {
+			query.type = type;
+		}
+
+		// Fetch categories
+		const categories = await Category.find(query).sort({ name: 1 });
+
+		res.status(200).json({
+			success: true,
+			count: categories.length,
+			data: categories,
+		});
+	} catch (error: any) {
+		console.error("Get categories error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error fetching categories",
+			error: error.message,
+		});
+	}
+};
