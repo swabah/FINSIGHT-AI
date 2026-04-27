@@ -1,8 +1,8 @@
 import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import EmbeddingCache from "../models/EmbeddingCache";
-import Transaction from "../models/Transaction";
+import EmbeddingCache from "../models/EmbeddingCache.js";
+import Transaction from "../models/Transaction.js";
 import mongoose from "mongoose";
 
 // Initialize MongoDB client for vector store

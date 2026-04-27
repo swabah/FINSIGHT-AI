@@ -15,12 +15,12 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import Transaction from "../models/Transaction";
-import Category from "../models/Category";
+import Transaction from "../models/Transaction.js";
+import Category from "../models/Category.js";
 import mongoose from "mongoose";
-import { stringifyTransactions } from "../utils/transactionStringifier";
-import { checkAndUpsertEmbeddings, searchSimilarTransactions } from "./vectorStoreService";
-import { getRecentTransactions } from "../utils/transactionSearch";
+import { stringifyTransactions } from "../utils/transactionStringifier.js";
+import { checkAndUpsertEmbeddings, searchSimilarTransactions } from "./vectorStoreService.js";
+import { getRecentTransactions } from "../utils/transactionSearch.js";
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage, type BaseMessage } from "@langchain/core/messages";
 
 // ─────────────────────────────────────────────────────────────────────────────

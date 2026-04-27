@@ -4,13 +4,13 @@ import helmet from "helmet";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-import connectDB from "./config/database";
-import { initializeVectorStore } from "./services/vectorStoreService";
-import authRoutes from "./routes/authRoutes";
-import transactionRoutes from "./routes/transactionRoutes";
-import chatRoutes from "./routes/chatRoutes";
-import analyticsRoutes from "./routes/analyticsRoutes";
-import { notFound, errorHandler } from "./middleware/errorHandler";
+import connectDB from "./config/database.js";
+import { initializeVectorStore } from "./services/vectorStoreService.js";
+import authRoutes from "./routes/authRoutes.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 // Load environment variables
 dotenv.config();

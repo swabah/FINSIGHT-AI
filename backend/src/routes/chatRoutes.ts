@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { protect } from "../middleware/auth";
+import { protect } from "../middleware/auth.js";
 import {
 	chatWithAI,
 	getChatHistory,
@@ -9,7 +9,7 @@ import {
 	getConversationMessages,
 	updateConversation,
 	deleteConversation,
-} from "../controllers/chatController";
+} from "../controllers/chatController.js";
 
 const router = Router();
 

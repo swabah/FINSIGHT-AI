@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { validationResult } from "express-validator";
-import Transaction from "../models/Transaction";
-import Category from "../models/Category";
-import { markDirty } from "../services/vectorStoreService";
+import Transaction from "../models/Transaction.js";
+import Category from "../models/Category.js";
+import { markDirty } from "../services/vectorStoreService.js";
 
 // @desc    Create a new transaction
 // @route   POST /api/transactions

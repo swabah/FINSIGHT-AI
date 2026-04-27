@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { protect } from "../middleware/auth";
+import { protect } from "../middleware/auth.js";
 import {
 	createTransaction,
 	getTransactions,
@@ -10,7 +10,7 @@ import {
 	createCategory,
 	updateCategory,
 	deleteCategory,
-} from "../controllers/transactionController";
+} from "../controllers/transactionController.js";
 
 const router = Router();
 

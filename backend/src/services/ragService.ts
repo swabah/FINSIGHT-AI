@@ -1,10 +1,10 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { searchSimilarTransactions } from "./vectorStoreService";
-import { stringifyTransactions } from "../utils/transactionStringifier";
-import { upsertTransactionChunks } from "./vectorStoreService";
-import { getRecentTransactions } from "../utils/transactionSearch";
+import { searchSimilarTransactions } from "./vectorStoreService.js";
+import { stringifyTransactions } from "../utils/transactionStringifier.js";
+import { upsertTransactionChunks } from "./vectorStoreService.js";
+import { getRecentTransactions } from "../utils/transactionSearch.js";
 
 // Initialize Google Gemini LLM (PREMIUM — gemini-2.5-pro)
 const llm = new ChatGoogleGenerativeAI({

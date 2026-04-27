@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-import Transaction from "../models/Transaction";
+import Transaction from "../models/Transaction.js";
 
 // @desc    Get analytics stats for dashboard
 // @route   GET /api/analytics/stats

@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { v4 as uuidv4 } from "uuid";
-import { runAgentPipeline, confirmDeleteTransaction, type HistoryEntry } from "../services/agentService";
-import { markDirty } from "../services/vectorStoreService";
-import ChatLog from "../models/ChatLog";
+import { runAgentPipeline, confirmDeleteTransaction, type HistoryEntry } from "../services/agentService.js";
+import { markDirty } from "../services/vectorStoreService.js";
+import ChatLog from "../models/ChatLog.js";
 
 // @desc    Chat with AI (agentic — function calling)
 // @route   POST /api/chat
