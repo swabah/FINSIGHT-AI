@@ -6,12 +6,12 @@ import { stringifyTransactions } from "../utils/transactionStringifier";
 import { upsertTransactionChunks } from "./vectorStoreService";
 import { getRecentTransactions } from "../utils/transactionSearch";
 
-// Initialize Google Gemini LLM (FREE)
+// Initialize Google Gemini LLM (PREMIUM — gemini-2.5-pro)
 const llm = new ChatGoogleGenerativeAI({
 	apiKey: process.env.GOOGLE_API_KEY,
-	model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
-	temperature: 0.4, // Slightly higher for more natural responses
-	maxOutputTokens: 2048, // Increased for detailed responses
+	model: process.env.GEMINI_MODEL || "gemini-2.5-pro",
+	temperature: 0.3, // Lower = more deterministic & precise financial analysis
+	maxOutputTokens: 8192, // Premium tier supports up to 65K; 8K is ideal for detailed reports
 });
 
 // RAG Prompt Template - Intelligent & Human-Readable

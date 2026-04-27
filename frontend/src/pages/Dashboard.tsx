@@ -1,191 +1,164 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAnalyticsStats } from "../services/analyticsService";
+import { fetchTransactions, fetchCategories } from "../services/transactionService";
 import { getAuthData } from "../services/authService";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-	FiArrowUpRight,
-	FiArrowDownLeft,
-	FiPieChart,
-	FiActivity,
-	FiRefreshCw,
-	FiAlertTriangle,
-    FiTrendingUp,
-    FiPocket
-} from "react-icons/fi";
-import ExpensePieChart from "../components/ExpensePieChart";
-import CashFlowBarChart from "../components/CashFlowBarChart";
+import { FiArrowUpRight, FiArrowDownRight, FiActivity, FiTag, FiCreditCard, FiTrendingUp } from "react-icons/fi";
 
-const Dashboard: React.FC = () => {
-	const auth = getAuthData();
-	const { data: responseData, isPending, error, refetch } = useQuery({
-		queryKey: ["analyticsStats"],
-		queryFn: () => fetchAnalyticsStats(auth?.token || ""),
-		enabled: !!auth?.token,
-	});
+const Dashboard = () => {
+    const auth = getAuthData();
 
-	const data = responseData?.data;
+    const { data: txData, isPending: txLoading } = useQuery({
+        queryKey: ["transactions"],
+        queryFn: () => fetchTransactions(auth?.token || ""),
+        enabled: !!auth?.token,
+    });
 
-	if (isPending) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<LoadingSpinner text="Analyzing..." />
-			</div>
-		);
-	}
+    const { data: catData, isPending: catLoading } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => fetchCategories(auth?.token || ""),
+        enabled: !!auth?.token,
+    });
 
-	if (error) {
-		return (
-			<div className="flex flex-col items-center justify-center h-64 gap-4 text-center animate-in fade-in duration-500">
-				<div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
-					<FiAlertTriangle size={20} />
-				</div>
-				<div>
-                    <p className="text-base font-bold text-slate-900">Analysis Interrupted</p>
-                    <p className="text-slate-500 text-xs font-medium">Failed to retrieve data.</p>
+    if (txLoading || catLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary animate-pulse mb-4">
+                    <FiActivity size={20} />
                 </div>
-				<Button onClick={() => refetch()} className="h-9 px-4 rounded-md font-bold text-xs" variant="outline">
-					<FiRefreshCw className="mr-2" /> Retry
-				</Button>
-			</div>
-		);
-	}
+                <p className="text-xs font-medium tracking-wide">Syncing account data...</p>
+            </div>
+        );
+    }
 
-	if (!data) return null;
-
-	const { income, expenses, balance } = data.currentMonth;
-	const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
-
-	return (
-		<div className="max-w-6xl mx-auto space-y-4 pb-8">
-			{/* KPI Cards Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* Savings Hero Card */}
-				<Card className="md:col-span-2 lg:col-span-2 rounded-xl bg-slate-900 text-white p-6 relative overflow-hidden border-none group">
-					<div className="relative z-10 flex flex-col h-full justify-between">
-						<div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center text-primary">
-                                    <FiTrendingUp size={12} />
-                                </div>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Monthly Efficiency</p>
-                            </div>
-							<h2 className="text-4xl font-heading font-extrabold tracking-tight mb-2">
-								{savingsRate.toFixed(0)}<span className="text-primary text-2xl">%</span>
-							</h2>
-						</div>
-						<div className="space-y-4">
-							<div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-								<div 
-									className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" 
-									style={{ width: `${Math.min(Math.max(savingsRate, 0), 100)}%` }}
-								/>
-							</div>
-							<p className="text-xs text-slate-400 font-medium leading-relaxed max-w-sm">
-								You've retained <span className="text-white font-bold">₹{balance.toLocaleString()}</span>. 
-								{savingsRate > 20 ? " Excellent velocity." : " Room for growth."}
-							</p>
-						</div>
-					</div>
-				</Card>
-
-				{/* Individual KPI Mini Cards */}
-				<div className="grid grid-cols-1 gap-4 md:col-span-1 lg:col-span-2">
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-						<KPICard
-							label="Income"
-							value={`₹${income.toLocaleString()}`}
-							color="indigo"
-                            icon={<FiArrowUpRight size={14} />}
-						/>
-						<KPICard
-							label="Spent"
-							value={`₹${expenses.toLocaleString()}`}
-							color="rose"
-                            icon={<FiArrowDownLeft size={14} />}
-						/>
-                        <div className="sm:col-span-2 bg-white rounded-xl p-5 flex items-center justify-between border border-slate-100">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FiPocket className="text-slate-400" size={12} />
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Balance</p>
-                                </div>
-                                <p className="text-xl font-heading font-extrabold text-slate-900 tracking-tight">₹{balance.toLocaleString()}</p>
-                            </div>
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${balance >= 0 ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
-                                {balance >= 0 ? <FiArrowUpRight size={18} /> : <FiArrowDownLeft size={18} />}
-                            </div>
-                        </div>
-					</div>
-				</div>
-			</div>
-
-			{/* Charts Section */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-				<Card className="rounded-xl border border-slate-100 bg-white overflow-hidden">
-					<CardHeader className="p-5 pb-0">
-						<div className="flex items-center justify-between">
-							<div>
-								<CardTitle className="text-sm font-extrabold text-slate-900">Capital Flow</CardTitle>
-								<CardDescription className="text-[10px] font-medium">6-month trends</CardDescription>
-							</div>
-							<FiActivity className="text-slate-300" size={14} />
-						</div>
-					</CardHeader>
-					<CardContent className="h-64 p-5 pt-2">
-						<CashFlowBarChart data={data.monthlyTrend} />
-					</CardContent>
-				</Card>
-
-				<Card className="rounded-xl border border-slate-100 bg-white overflow-hidden">
-					<CardHeader className="p-5 pb-0">
-						<div className="flex items-center justify-between">
-							<div>
-								<CardTitle className="text-sm font-extrabold text-slate-900">Spending Portfolio</CardTitle>
-								<CardDescription className="text-[10px] font-medium">Categorical view</CardDescription>
-							</div>
-							<FiPieChart className="text-slate-300" size={14} />
-						</div>
-					</CardHeader>
-					<CardContent className="h-64 p-5 pt-2 flex items-center justify-center">
-						<ExpensePieChart data={data.categoryBreakdown} />
-					</CardContent>
-				</Card>
-			</div>
-		</div>
-	);
-};
-
-const KPICard = ({
-	label,
-	value,
-    color,
-    icon
-}: {
-	label: string;
-	value: string;
-    color: "indigo" | "rose" | "emerald";
-    icon: React.ReactNode;
-}) => {
-    const isIndigo = color === 'indigo';
-    const bgColor = isIndigo ? 'bg-indigo-50/50' : color === 'rose' ? 'bg-rose-50/50' : 'bg-emerald-50/50';
-    const accentBg = isIndigo ? 'bg-indigo-100' : color === 'rose' ? 'bg-rose-100' : 'bg-emerald-100';
-    const textColor = isIndigo ? 'text-indigo-600' : color === 'rose' ? 'text-rose-600' : 'text-emerald-600';
+    const transactions = txData?.data || [];
+    const categories = catData?.data || [];
+    
+    const income = transactions.filter((t: any) => t.type === "income").reduce((acc: number, t: any) => acc + t.amount, 0);
+    const expense = transactions.filter((t: any) => t.type === "expense").reduce((acc: number, t: any) => acc + t.amount, 0);
+    const balance = income - expense;
 
     return (
-        <div className={`bg-white rounded-xl p-5 border border-slate-100 transition-colors hover:bg-slate-50 group ${bgColor}`}>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">{label}</p>
-            <div className="flex items-center justify-between">
-                <p className="text-lg font-heading font-extrabold text-slate-900 tracking-tight">{value}</p>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accentBg} ${textColor}`}>
-                    {icon}
+        <div className="space-y-8 pb-20">
+            {/* ── Metric Grid ── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <MetricCard 
+                    label="Current Balance" 
+                    value={balance} 
+                    icon={<FiActivity size={16} />} 
+                    variant="neutral"
+                />
+                <MetricCard 
+                    label="Total Income" 
+                    value={income} 
+                    icon={<FiArrowUpRight size={16} />} 
+                    variant="success"
+                />
+                <MetricCard 
+                    label="Total Expenses" 
+                    value={expense} 
+                    icon={<FiArrowDownRight size={16} />} 
+                    variant="danger"
+                />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* ── Recent Activity ── */}
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-2">
+                            <FiTrendingUp className="text-primary" />
+                            <h3 className="text-base font-medium">Recent Activity</h3>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        {transactions.length === 0 ? (
+                            <div className="p-12 text-center bg-card border border-border rounded-lg">
+                                <p className="text-xs font-medium text-muted-foreground">No recent transactions documented</p>
+                            </div>
+                        ) : (
+                            transactions.slice(0, 10).map((t: any) => (
+                                <ActivityRow key={t._id} t={t} />
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Categories ── */}
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-2">
+                            <FiTag className="text-primary" />
+                            <h3 className="text-base font-medium">Categories</h3>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-card border border-border rounded-lg divide-y divide-border">
+                        {categories.slice(0, 8).map((c: any) => (
+                            <div key={c._id} className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors cursor-default group">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color_code }} />
+                                    <span className="text-xs font-medium">{c.name}</span>
+                                </div>
+                                <span className="text-[10px] font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Active</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
+const MetricCard = ({ label, value, icon, variant }: any) => {
+    const isSuccess = variant === "success";
+    const isDanger = variant === "danger";
+    
+    return (
+        <div className="p-6 bg-card border border-border rounded-lg hover:border-primary/50 transition-all group">
+            <div className="flex items-center gap-3 mb-4">
+                <div className={`w-8 h-8 flex items-center justify-center rounded transition-all duration-300 ${
+                    isSuccess ? "bg-emerald-500/10 text-emerald-500" : isDanger ? "bg-rose-500/10 text-rose-500" : "bg-card/50 shadow-sm border border-border text-foreground"
+                }`}>
+                    {icon}
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            </div>
+            
+            <h4 className={`text-2xl font-medium tracking-tight ${
+                isSuccess ? "text-emerald-500" : isDanger ? "text-rose-500" : "text-foreground"
+            }`}>
+                ₹{value.toLocaleString()}
+            </h4>
+        </div>
+    );
+};
+
+const ActivityRow = ({ t }: any) => (
+    <div className="flex items-center justify-between p-3 px-4 bg-card border border-border/80 rounded-xl hover:border-primary/30 transition-all group cursor-default shadow-sm hover:shadow-md">
+        <div className="flex items-center gap-4 min-w-0">
+            <div className={`w-8 h-8 flex items-center justify-center text-xl shrink-0 border rounded-lg transition-all duration-300 shadow-sm ${
+                t.type === "income" ? "text-emerald-500 bg-emerald-500/5 border-emerald-500/20" : "text-muted-foreground bg-white border-border"
+            }`}>
+                <FiCreditCard size={14} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground leading-none mb-1.5 truncate">{t.description || "Uncategorized Transaction"}</p>
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <span className="text-[10px] font-medium text-primary px-1.5 py-0.5 bg-primary/5 rounded border border-primary/10 shrink-0">
+                        {typeof t.category === "object" ? t.category.name : t.category}
+                    </span>
+                    <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                        {new Date(t.date).toLocaleDateString()}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div className="ml-4 shrink-0">
+            <span className={`text-sm font-medium tracking-tight ${t.type === "income" ? "text-emerald-500" : "text-foreground"}`}>
+                {t.type === "income" ? "+" : "-"}₹{t.amount.toLocaleString()}
+            </span>
+        </div>
+    </div>
+);
 
 export default Dashboard;
-

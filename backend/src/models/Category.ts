@@ -2,7 +2,6 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface ICategory extends Document {
 	name: string;
-	type: "income" | "expense";
 	color_code: string;
 	isDefault: boolean;
 	user?: mongoose.Types.ObjectId;
@@ -16,11 +15,6 @@ const CategorySchema: Schema = new Schema(
 			type: String,
 			required: [true, "Category name is required"],
 			trim: true,
-		},
-		type: {
-			type: String,
-			required: [true, "Category type is required"],
-			enum: ["income", "expense"],
 		},
 		color_code: {
 			type: String,
@@ -41,11 +35,10 @@ const CategorySchema: Schema = new Schema(
 	},
 );
 
-// Compound index for unique category names per type
-CategorySchema.index({ name: 1, type: 1 }, { unique: true });
+// Compound index for unique category names per user
+CategorySchema.index({ name: 1, user: 1 }, { unique: true });
 
 // Index for faster queries
-CategorySchema.index({ type: 1 });
 CategorySchema.index({ isDefault: 1 });
 
 export default mongoose.model<ICategory>("Category", CategorySchema);

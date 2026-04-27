@@ -2,7 +2,6 @@ import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/database";
-import { seedCategories } from "./utils/seedCategories";
 import { initializeVectorStore } from "./services/vectorStoreService";
 import authRoutes from "./routes/authRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
@@ -16,14 +15,26 @@ dotenv.config();
 // Initialize Express app
 const app: Application = express();
 
-// Connect to MongoDB
-connectDB();
+const startServer = async () => {
+	try {
+		// Connect to MongoDB
+		await connectDB();
 
-// Seed default categories after database connection
-seedCategories();
+		// Initialize Vector Store for RAG pipeline
+		await initializeVectorStore();
 
-// Initialize Vector Store for RAG pipeline
-initializeVectorStore();
+		// Start server
+		const PORT = process.env.PORT || 5000;
+		app.listen(PORT, () => {
+			console.log(`🚀 Server is running on port ${PORT}`);
+			console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+			console.log(`🔗 API: http://localhost:${PORT}`);
+		});
+	} catch (error) {
+		console.error("Failed to start server:", error);
+		process.exit(1);
+	}
+};
 
 // Middleware
 const allowedOrigins = [
@@ -80,13 +91,7 @@ app.get("/health", (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-	console.log(`🚀 Server is running on port ${PORT}`);
-	console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-	console.log(`🔗 API: http://localhost:${PORT}`);
-});
+// Execute server startup
+startServer();
 
 export default app;

@@ -4,8 +4,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import TransactionsList from "./pages/TransactionsList";
-
+import Categories from "./pages/Categories";
 import Chat from "./pages/Chat";
+
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -18,7 +19,7 @@ function App() {
 				<Route path="/login"    element={<Login />} />
 				<Route path="/register" element={<Register />} />
 
-				{/* Protected — wrapped in the sidebar Layout */}
+				{/* Protected — wrapped in the minimalist Layout */}
 				<Route
 					path="/chat"
 					element={
@@ -43,10 +44,17 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
+				<Route
+					path="/categories"
+					element={
+						<ProtectedRoute>
+							<Layout><Categories /></Layout>
+						</ProtectedRoute>
+					}
+				/>
 
-
-				{/* Default → Landing */}
-				<Route path="*" element={<Navigate to="/" replace />} />
+				{/* Default → Chat if logged in, otherwise Landing via Navigate logic */}
+				<Route path="*" element={<Navigate to="/chat" replace />} />
 			</Routes>
 		</Router>
 	);

@@ -114,3 +114,72 @@ export const fetchCategories = async (
 		);
 	}
 };
+
+export const createCategory = async (
+	data: { name: string; color_code?: string },
+	token: string,
+): Promise<any> => {
+	try {
+		const response = await axios.post(
+			`${API_BASE_URL}/transactions/categories`,
+			data,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			},
+		);
+		return response.data;
+	} catch (error: any) {
+		throw new Error(
+			error.response?.data?.message || "Failed to create category.",
+		);
+	}
+};
+
+export const updateCategory = async (
+	id: string,
+	data: { name: string; color_code?: string },
+	token: string,
+): Promise<any> => {
+	try {
+		const response = await axios.put(
+			`${API_BASE_URL}/transactions/categories/${id}`,
+			data,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			},
+		);
+		return response.data;
+	} catch (error: any) {
+		throw new Error(
+			error.response?.data?.message || "Failed to update category.",
+		);
+	}
+};
+
+export const deleteCategory = async (
+	id: string,
+	token: string,
+): Promise<any> => {
+	try {
+		const response = await axios.delete(
+			`${API_BASE_URL}/transactions/categories/${id}`,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			},
+		);
+		return response.data;
+	} catch (error: any) {
+		throw new Error(
+			error.response?.data?.message || "Failed to delete category.",
+		);
+	}
+};

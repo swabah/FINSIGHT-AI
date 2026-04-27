@@ -28,9 +28,9 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ data }) => {
 			{
 				data: data.map((item) => item.amount),
 				backgroundColor: data.map((item) => item.color),
-				borderColor: "rgba(15, 23, 42, 0.8)",
+				borderColor: "#ffffff",
 				borderWidth: 3,
-				hoverOffset: 15,
+				hoverOffset: 10,
 				hoverBorderWidth: 4,
 			},
 		],
@@ -46,7 +46,7 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ data }) => {
 					padding: 20,
 					usePointStyle: true,
 					pointStyle: "circle",
-					color: "#94a3b8",
+					color: "#64748b",
 					font: {
 						size: 12,
 						weight: 500 as const,
@@ -54,10 +54,10 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ data }) => {
 				},
 			},
 			tooltip: {
-				backgroundColor: "rgba(30, 41, 59, 0.95)",
-				titleColor: "#f8fafc",
-				bodyColor: "#94a3b8",
-				borderColor: "rgba(148, 163, 184, 0.2)",
+				backgroundColor: "#ffffff",
+				titleColor: "#0f172a",
+				bodyColor: "#64748b",
+				borderColor: "rgba(0,0,0,0.05)",
 				borderWidth: 1,
 				padding: 12,
 				displayColors: true,
@@ -72,7 +72,11 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ data }) => {
 		},
 	};
 
-	return <Pie data={chartData} options={options} />;
+	return (
+		<div className="relative w-full h-[240px]">
+			<Pie data={chartData} options={options} />
+		</div>
+	);
 };
 
 export default ExpensePieChart;

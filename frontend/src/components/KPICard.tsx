@@ -71,7 +71,7 @@ const KPICard: React.FC<KPICardProps> = ({ title, amount, type, icon, trend }) =
 	return (
 		<Card
 			className={cn(
-                "bg-zinc-950/40 border-white/5 backdrop-blur-3xl rounded-[2rem] relative group shadow-2xl overflow-hidden transition-all duration-500 hover:border-white/10 hover:-translate-y-1",
+                "bg-card border-border border rounded-[2rem] relative group shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-500 hover:border-border/80 hover:-translate-y-1 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]",
                 styles.glow
             )}
 		>
@@ -83,7 +83,7 @@ const KPICard: React.FC<KPICardProps> = ({ title, amount, type, icon, trend }) =
 			<CardContent className="p-8 relative z-10 flex flex-col h-full">
 				<div className="flex items-start justify-between mb-8">
 					<div className="space-y-1">
-						<h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">
+						<h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] mb-4">
 							{title}
 						</h3>
 						<p className={cn("text-4xl font-heading font-black tracking-tighter tabular-nums flex items-baseline gap-1", styles.text)}>
@@ -96,7 +96,7 @@ const KPICard: React.FC<KPICardProps> = ({ title, amount, type, icon, trend }) =
 					</div>
 					<div
 						className={cn(
-                            "p-4 rounded-2xl text-2xl border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 shadow-xl",
+                            "p-4 rounded-2xl text-2xl border transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 shadow-sm",
                             styles.iconBg
                         )}
 					>
@@ -104,9 +104,9 @@ const KPICard: React.FC<KPICardProps> = ({ title, amount, type, icon, trend }) =
 					</div>
 				</div>
 
-				<div className="flex items-center gap-3 pt-6 border-t border-white/5 mt-auto">
-					<div className={cn("w-2 h-2 rounded-full animate-pulse shadow-lg", styles.indicator)}></div>
-					<span className="text-[10px] font-black text-zinc-500 tracking-[0.2em]">{formatTrend()}</span>
+				<div className="flex items-center gap-3 pt-6 border-t border-border mt-auto">
+					<div className={cn("w-2 h-2 rounded-full animate-pulse shadow-sm", styles.indicator)}></div>
+					<span className="text-[10px] font-bold text-muted-foreground/60 tracking-[0.2em]">{formatTrend()}</span>
 				</div>
 			</CardContent>
 		</Card>

@@ -2,29 +2,34 @@ import { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { logout, getAuthData } from "../services/authService";
 import {
-	FiMessageCircle,
 	FiLogOut,
 	FiMenu,
 	FiX,
-	FiGrid,
 	FiList,
 	FiActivity,
-	FiSettings,
+	FiTag,
+	FiMessageSquare,
+	FiPieChart,
+	FiChevronLeft,
 	FiChevronRight,
 } from "react-icons/fi";
-import { Button } from "@/components/ui/button";
+import ConfirmModal from "./ConfirmModal";
 
 const NAV_ITEMS = [
-	{ to: "/dashboard", icon: <FiGrid />, label: "Overview" },
-	{ to: "/chat", icon: <FiMessageCircle />, label: "AI Advisor" },
-	{ to: "/transactions", icon: <FiList />, label: "History" },
+	{ to: "/chat", icon: <FiMessageSquare />, label: "Chat" },
+	{ to: "/dashboard", icon: <FiPieChart />, label: "Overview" },
+	{ to: "/transactions", icon: <FiList />, label: "Transactions" },
+	{ to: "/categories", icon: <FiTag />, label: "Categories" },
 ];
 
-const Layout: React.FC<{ children: React.FC | React.ReactNode }> = ({
+const Layout: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const [showMobileMenu, setShowMobileMenu] = useState(false);
+	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const auth = getAuthData();
 
 	const handleLogout = () => {
@@ -32,203 +37,182 @@ const Layout: React.FC<{ children: React.FC | React.ReactNode }> = ({
 		navigate("/login");
 	};
 
+	const isChat = location.pathname === "/chat";
+
 	return (
-		<div className="flex h-screen bg-white">
-			{/* ── Desktop Sidebar ── */}
-			<aside className="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white">
-				{/* Logo */}
-				<div className="p-6 flex items-center gap-3">
-					<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
-						<FiActivity className="text-lg" />
+		<div className="flex h-screen bg-background text-foreground relative overflow-hidden font-sans">
+			<ConfirmModal
+				isOpen={showLogoutConfirm}
+				onClose={() => setShowLogoutConfirm(false)}
+				onConfirm={handleLogout}
+				title="Confirm Logout"
+				message="Are you sure you want to log out of your account?"
+				confirmText="Log Out"
+				variant="danger"
+			/>
+
+			{/* ── Left Sidebar (Togglable) ── */}
+			<aside 
+				className={`hidden md:flex flex-col border-r border-border bg-card z-50 transition-all duration-300 relative ${
+					isSidebarOpen ? "w-64" : "w-20"
+				}`}
+			>
+				{/* Toggle Button */}
+				<button 
+					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+					className="absolute -right-3 top-10 w-6 h-6 rounded-full bg-white border border-border flex items-center justify-center text-foreground hover:bg-accent transition-all z-[60] shadow-sm"
+				>
+					{isSidebarOpen ? <FiChevronLeft size={12} /> : <FiChevronRight size={12} />}
+				</button>
+
+				<div className="p-6 flex items-center gap-3 h-20 shrink-0">
+					<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shrink-0 shadow-sm border border-primary/20">
+						<FiActivity size={18} />
 					</div>
-					<span className="font-heading font-extrabold text-lg text-slate-900 tracking-tight">
-						FinSight<span className="text-primary">AI</span>
-					</span>
+					{isSidebarOpen && (
+						<span className="font-semibold text-lg tracking-tight truncate text-foreground">
+							FinSight AI
+						</span>
+					)}
 				</div>
 
-				{/* Navigation */}
-				<div className="flex-1 px-4 py-4 space-y-8">
-					<div>
-						<p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-							Main Menu
-						</p>
-						<nav className="space-y-1">
-							{NAV_ITEMS.map((item) => (
-								<NavItem key={item.to} {...item} />
-							))}
-						</nav>
-					</div>
+				<div className="flex-1 flex flex-col justify-between py-4 pb-8">
+					<nav className="px-3 space-y-1">
+						{NAV_ITEMS.map((item) => (
+							<NavLink
+								key={item.to}
+								to={item.to}
+								className={({ isActive }) =>
+									`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+										isActive
+											? "bg-primary/5 text-primary font-semibold"
+											: "text-muted-foreground hover:bg-accent hover:text-foreground font-medium"
+									}`
+								}
+							>
+								<div className="shrink-0 text-[1.1rem]">{item.icon}</div>
+								{isSidebarOpen && <span className="text-sm">{item.label}</span>}
+							</NavLink>
+						))}
+					</nav>
 
-					<div>
-						<p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-							Settings
-						</p>
-						<nav className="space-y-1">
-							<NavItem
-								to="/settings"
-								icon={<FiSettings />}
-								label="Preferences"
-							/>
-						</nav>
-					</div>
-				</div>
-
-				{/* User Profile */}
-				<div className="p-4 border-t border-slate-100">
-					<div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-						<div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
-							{auth?.user?.username?.charAt(0).toUpperCase()}
+					<div className="px-3 space-y-4">
+						<div className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent transition-all cursor-pointer group">
+							<div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 uppercase border border-primary/20">
+								{auth?.user?.username?.charAt(0)}
+							</div>
+							{isSidebarOpen && (
+								<div className="flex-1 min-w-0">
+									<p className="text-xs font-semibold text-foreground truncate">
+										{auth?.user?.username}
+									</p>
+									<p className="text-[10px] text-muted-foreground truncate">
+										{auth?.user?.email}
+									</p>
+								</div>
+							)}
+							{isSidebarOpen && (
+								<button
+									type="button"
+									onClick={() => setShowLogoutConfirm(true)}
+									className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+									title="Logout"
+								>
+									<FiLogOut size={16} />
+								</button>
+							)}
 						</div>
-						<div className="flex-1 min-w-0">
-							<p className="text-xs font-bold text-slate-900 truncate">
-								{auth?.user?.username}
-							</p>
-							<p className="text-[10px] text-slate-400 font-semibold tracking-tight">
-								Pro Plan
-							</p>
-						</div>
+						{!isSidebarOpen && (
+							<button
+								type="button"
+								onClick={() => setShowLogoutConfirm(true)}
+								className="w-full flex justify-center text-muted-foreground hover:text-destructive p-2"
+							>
+								<FiLogOut size={18} />
+							</button>
+						)}
 					</div>
-					<button
-						type="button"
-						onClick={handleLogout}
-						className="flex items-center gap-3 w-full px-4 py-2 mt-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold transition-all"
-					>
-						<FiLogOut />
-						Logout
-					</button>
 				</div>
 			</aside>
 
-			{/* ── Mobile Header ── */}
-			<div className="md:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-slate-100 px-4 h-14 flex items-center justify-between">
+			{/* ── Mobile Nav ── */}
+			<div className="md:hidden fixed top-0 inset-x-0 z-40 bg-background border-b border-border px-6 h-16 flex items-center justify-between">
 				<div className="flex items-center gap-2">
-					<FiActivity className="text-primary text-lg" />
-					<span className="font-heading font-extrabold text-slate-900">
-						FinSight
-					</span>
+					<FiActivity className="text-primary text-xl" />
+					<span className="font-medium tracking-tight text-lg">FinSight</span>
 				</div>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="rounded-md h-9 w-9"
-					onClick={() => setShowMobileMenu((v) => !v)}
+				<button
+					onClick={() => setShowMobileMenu(!showMobileMenu)}
+					className="w-10 h-10 flex items-center justify-center text-foreground"
 				>
-					{showMobileMenu ? <FiX size={18} /> : <FiMenu size={18} />}
-				</Button>
+					{showMobileMenu ? <FiX size={20} /> : <FiMenu size={20} />}
+				</button>
 			</div>
 
-			{/* ── Main Content ── */}
-			<main className="flex-1 flex flex-col min-w-0 overflow-hidden md:pt-0 pt-14">
-				<div className="flex-1 overflow-y-auto bg-slate-50/20">
-					<PageContent>{children}</PageContent>
-				</div>
+			{/* ── Main Workspace ── */}
+			<main className="flex-1 relative flex flex-col min-w-0 overflow-hidden md:pt-0 pt-16 bg-background">
+				{isChat ? (
+					<div className="flex-1 overflow-hidden">{children}</div>
+				) : (
+					<div className="flex-1 overflow-y-auto">
+						<PageContainer>{children}</PageContainer>
+					</div>
+				)}
 			</main>
 
-			{/* ── Mobile Overlay Menu ── */}
+			{/* ── Mobile Menu Overlay ── */}
 			{showMobileMenu && (
-				<div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col p-6 animate-in fade-in duration-200">
-					<div className="flex items-center justify-between mb-8">
-						<div className="flex items-center gap-2">
-							<FiActivity className="text-primary text-xl" />
-							<span className="font-heading font-extrabold text-xl text-slate-900">
-								FinSight
-							</span>
-						</div>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="rounded-md"
-							onClick={() => setShowMobileMenu(false)}
-						>
-							<FiX size={20} />
-						</Button>
-					</div>
-					<nav className="space-y-2 flex-1">
+				<div className="md:hidden fixed inset-0 z-50 bg-background flex flex-col pt-20 px-8 animate-in slide-in-from-top duration-300">
+					<nav className="space-y-2">
 						{NAV_ITEMS.map((item) => (
 							<NavLink
 								key={item.to}
 								to={item.to}
 								onClick={() => setShowMobileMenu(false)}
 								className={({ isActive }) =>
-									`flex items-center gap-4 px-4 py-3 rounded-lg font-bold text-base transition-all ${
+									`flex items-center gap-4 px-6 py-4 rounded font-medium text-base transition-all ${
 										isActive
-											? "bg-primary/5 text-primary"
-											: "text-slate-500 hover:bg-slate-50"
+											? "bg-primary text-white"
+											: "text-muted-foreground hover:bg-accent"
 									}`
 								}
 							>
 								{item.icon} {item.label}
 							</NavLink>
 						))}
+						<button
+							onClick={() => setShowLogoutConfirm(true)}
+							className="w-full flex items-center gap-4 px-6 py-4 rounded font-medium text-base text-destructive hover:bg-destructive/5 transition-all text-left"
+						>
+							<FiLogOut /> Logout
+						</button>
 					</nav>
-					<button
-						type="button"
-						onClick={handleLogout}
-						className="flex items-center gap-4 px-4 py-4 text-rose-500 font-bold border-t border-slate-100"
-					>
-						<FiLogOut /> Logout
-					</button>
 				</div>
 			)}
 		</div>
 	);
 };
 
-/* Inner wrapper for page content */
-const PageContent: React.FC<{ children: any }> = ({ children }) => {
+const PageContainer: React.FC<{ children: any }> = ({ children }) => {
 	const location = useLocation();
-	const pageTitle =
-		NAV_ITEMS.find((n) => n.to === location.pathname)?.label ?? "Overview";
+	const pageTitle = NAV_ITEMS.find((n) => n.to === location.pathname)?.label ?? "Dashboard";
 
 	return (
-		<div className="h-full flex flex-col p-4 md:p-6 lg:p-8">
-			<div className="mb-6 flex items-center justify-between px-2">
-				<div>
-					<h1 className="text-xl font-heading font-extrabold text-slate-900">
-						{pageTitle}
-					</h1>
+		<div className="min-h-full flex flex-col p-6 md:p-10 max-w-6xl mx-auto w-full animate-fade-up z-10 relative">
+            {/* The gradient is injected by index.css but we ensure container is elevated */}
+			<header className="mb-8 p-5 bg-card/70 backdrop-blur-md rounded-2xl border border-border shadow-sm flex items-center justify-between z-10 relative">
+				<h1 className="text-2xl font-semibold text-foreground tracking-tight">
+					{pageTitle}
+				</h1>
+				<div className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+					Workspace / {pageTitle}
 				</div>
-				<div className="hidden sm:flex items-center gap-3">
-					<div className="bg-white px-3 py-1.5 rounded-lg border border-slate-100 flex items-center gap-2">
-						<div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-						<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-							Live
-						</span>
-					</div>
-				</div>
-			</div>
-			<div className="flex-1">
-				{typeof children === "function" ? children() : children}
+			</header>
+			<div className="flex-1 z-10 relative">
+				{children}
 			</div>
 		</div>
 	);
 };
-
-const NavItem = ({
-	to,
-	icon,
-	label,
-}: {
-	to: string;
-	icon: React.ReactNode;
-	label: string;
-}) => (
-	<NavLink
-		to={to}
-		className={({ isActive }) =>
-			`group flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
-				isActive ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-50"
-			}`
-		}
-	>
-		<div className="flex items-center gap-3">
-			<span className="text-base">{icon}</span>
-			{label}
-		</div>
-		<FiChevronRight
-			className={`text-xs transition-all ${to === useLocation().pathname ? "hidden" : "opacity-0 group-hover:opacity-100"}`}
-		/>
-	</NavLink>
-);
 
 export default Layout;

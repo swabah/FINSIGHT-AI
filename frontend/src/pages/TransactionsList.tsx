@@ -1,31 +1,39 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import ConfirmModal from "../components/ConfirmModal";
+import { Label } from "@/components/ui/label";
 import {
-	fetchTransactions,
-	deleteTransaction,
+	FiDownload,
+	FiEdit2,
+	FiPlus,
+	FiSearch,
+	FiTrash2,
+	FiX,
+} from "react-icons/fi";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
 	createTransaction,
-	updateTransaction,
+	deleteTransaction,
 	fetchCategories,
+	fetchTransactions,
+	updateTransaction,
 } from "../services/transactionService";
 import { getAuthData } from "../services/authService";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import {
-	FiPlus,
-	FiTrash2,
-	FiEdit2,
-	FiSearch,
-	FiX,
-	FiActivity,
-	FiCalendar,
-	FiTag,
-	FiFilter,
-} from "react-icons/fi";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
-/* ─── Types ─── */
-interface TxFormData {
+interface Category {
+	_id: string;
+	name: string;
+}
+
+interface Transaction {
+	_id: string;
+	amount: number;
+	type: "income" | "expense";
+	category: Category | string;
+	date: string;
+	description?: string;
+}
+
+interface TransactionFormData {
 	amount: string;
 	category: string;
 	type: "income" | "expense";
@@ -33,459 +41,283 @@ interface TxFormData {
 	description: string;
 }
 
-const EMPTY_FORM: TxFormData = {
-	amount: "",
-	category: "",
-	type: "expense",
-	date: new Date().toISOString().split("T")[0],
-	description: "",
-};
+const TransactionsList = () => {
+    const auth = getAuthData();
+    const queryClient = useQueryClient();
+    const [search, setSearch] = useState("");
+    const [modalOpen, setModalOpen] = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+    const [form, setForm] = useState<TransactionFormData>({
+        amount: "",
+        category: "",
+        type: "expense",
+        date: new Date().toISOString().split("T")[0],
+        description: "",
+    });
+    const [error, setError] = useState<string | null>(null);
 
-/* ─── Main Component ─── */
-const TransactionsList: React.FC = () => {
-	const auth = getAuthData();
-	const queryClient = useQueryClient();
-	const [search, setSearch] = useState("");
-	const [modalOpen, setModalOpen] = useState(false);
-	const [editingTx, setEditingTx] = useState<any>(null);
-	const [form, setForm] = useState<TxFormData>(EMPTY_FORM);
-	const [error, setError] = useState<string | null>(null);
+    // Queries
+    const { data: txData } = useQuery({
+        queryKey: ["transactions"],
+        queryFn: () => fetchTransactions(auth?.token || ""),
+        enabled: !!auth?.token,
+    });
 
-	// Queries
-	const { data: txData, isPending: txLoading } = useQuery({
-		queryKey: ["transactions"],
-		queryFn: () => fetchTransactions(auth?.token || ""),
-		enabled: !!auth?.token,
-	});
+    const { data: catData } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => fetchCategories(auth?.token || ""),
+        enabled: !!auth?.token,
+    });
 
-	const { data: catData } = useQuery({
-		queryKey: ["categories"],
-		queryFn: () => fetchCategories(auth?.token || ""),
-		enabled: !!auth?.token,
-	});
+    const categories: Category[] = catData?.data || [];
 
-	// Mutations
-	const deleteMut = useMutation({
-		mutationFn: (id: string) => deleteTransaction(id, auth?.token || ""),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ["transactions"] }),
-	});
+    // Mutations
+    const deleteMut = useMutation({
+        mutationFn: (id: string) => deleteTransaction(id, auth?.token || ""),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            setConfirmDeleteId(null);
+        },
+    });
 
-	const saveMut = useMutation({
-		mutationFn: (data: any) =>
-			editingTx
-				? updateTransaction(editingTx._id, data, auth?.token || "")
-				: createTransaction(data, auth?.token || ""),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["transactions"] });
-			closeModal();
-		},
-		onError: (err: any) => {
-			setError(err.message || "Operation failed");
-		},
-	});
+    const saveMut = useMutation({
+        mutationFn: (data: Omit<TransactionFormData, "amount"> & { amount: number }) =>
+            editingTx
+                ? updateTransaction(editingTx._id, data, auth?.token || "")
+                : createTransaction(data, auth?.token || ""),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            closeModal();
+        },
+        onError: (err: Error) => setError(err.message),
+    });
 
-	// Handlers
-	const openAdd = () => {
-		setEditingTx(null);
-		setForm(EMPTY_FORM);
-		setError(null);
-		setModalOpen(true);
-	};
+    // Handlers
+    const openAdd = () => {
+        setEditingTx(null);
+        setForm({
+            amount: "",
+            category: "",
+            type: "expense",
+            date: new Date().toISOString().split("T")[0],
+            description: "",
+        });
+        setError(null);
+        setModalOpen(true);
+    };
 
-	const openEdit = (t: any) => {
-		setEditingTx(t);
-		setError(null);
-		// Ensure category is extracted as ID
-		const catId = typeof t.category === "object" ? t.category?._id : t.category;
-		setForm({
-			amount: t.amount.toString(),
-			category: catId || "",
-			type: t.type,
-			date: t.date ? t.date.split("T")[0] : new Date().toISOString().split("T")[0],
-			description: t.description || "",
-		});
-		setModalOpen(true);
-	};
+    const openEdit = (t: Transaction) => {
+        setEditingTx(t);
+        const catId = typeof t.category === "object" ? t.category?._id : t.category;
+        setForm({
+            amount: t.amount.toString(),
+            category: catId || "",
+            type: t.type,
+            date: t.date ? t.date.split("T")[0] : new Date().toISOString().split("T")[0],
+            description: t.description || "",
+        });
+        setModalOpen(true);
+    };
 
-	const closeModal = () => {
-		setModalOpen(false);
-		setEditingTx(null);
-		setForm(EMPTY_FORM);
-		setError(null);
-	};
+    const closeModal = () => {
+        setModalOpen(false);
+        setEditingTx(null);
+        setError(null);
+    };
 
-	const handleSave = (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!form.category) return setError("Please select a category");
-		setError(null);
-		saveMut.mutate({
-			...form,
-			amount: parseFloat(form.amount),
-		});
-	};
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.category) return setError("Please select a category");
+        saveMut.mutate({ ...form, amount: parseFloat(form.amount) });
+    };
 
-	// Logic
-	const filtered = useMemo(() => {
-		const list = txData?.data || [];
-		if (!search) return list;
-		const s = search.toLowerCase();
-		return list.filter(
-			(t: any) =>
-				t.description?.toLowerCase().includes(s) ||
-				(typeof t.category === "object" && t.category?.name?.toLowerCase().includes(s)),
-		);
-	}, [txData, search]);
+    const filtered = useMemo(() => {
+        const list: Transaction[] = txData?.data || [];
+        if (!search) return list;
+        const s = search.toLowerCase();
+        return list.filter((t: Transaction) =>
+            t.description?.toLowerCase().includes(s) ||
+            (typeof t.category === "object" && t.category?.name?.toLowerCase().includes(s))
+        );
+    }, [txData, search]);
 
-	const categories = catData?.data || [];
-	const activeCategories = categories.filter((c: any) => c.type === form.type);
+    return (
+        <div className="space-y-6 pb-20">
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                onConfirm={() => confirmDeleteId && deleteMut.mutate(confirmDeleteId)}
+                title="Delete Transaction"
+                message="Are you sure you want to permanently remove this transaction from your records?"
+                confirmText="Delete"
+                variant="danger"
+            />
 
-	return (
-		<div className="max-w-6xl mx-auto space-y-4 pb-8">
-			{/* Action Bar */}
-			<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-				<div className="relative flex-1 max-w-sm group">
-					<FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-					<Input
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						placeholder="Search records..."
-						className="h-10 pl-10 pr-4 rounded-lg border-slate-200 bg-white text-sm"
-					/>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						className="h-10 px-4 rounded-lg bg-white border-slate-200 hover:bg-slate-50 text-xs font-bold"
-					>
-						<FiFilter className="mr-2" /> Filters
-					</Button>
-					<Button
-						onClick={openAdd}
-						className="h-10 px-4 rounded-lg bg-slate-900 text-xs font-bold text-white"
-					>
-						<FiPlus className="mr-2" /> New Record
-					</Button>
-				</div>
-			</div>
+            {/* ── Toolbar ── */}
+            <div className="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center p-5 bg-card border border-border/60 rounded-2xl shadow-sm">
+                <div className="flex-1 max-w-lg relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <FiSearch size={16} />
+                    </div>
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by description or category..."
+                        className="w-full h-11 pl-11 pr-4 bg-white border border-border/60 rounded-xl text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-medium text-foreground placeholder:opacity-40 shadow-sm shadow-black/5"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <button type="button" className="h-11 px-5 bg-white border border-border/60 rounded-xl text-xs font-semibold hover:border-border transition-all flex items-center gap-2 text-foreground shadow-sm shadow-black/5">
+                        <FiDownload size={14} /> Export
+                    </button>
+                    <button
+                        type="button"
+                        onClick={openAdd}
+                        className="h-11 px-6 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-sm shadow-primary/20"
+                    >
+                        <FiPlus size={14} /> Add Transaction
+                    </button>
+                </div>
+            </div>
 
-			{/* Results Surface */}
-			{txLoading ? (
-				<div className="flex justify-center py-20">
-					<LoadingSpinner text="Loading..." />
-				</div>
-			) : filtered.length === 0 ? (
-				<div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-slate-100">
-					<div className="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-slate-300 mb-4">
-						<FiActivity size={20} />
-					</div>
-					<h3 className="text-lg font-bold text-slate-900 mb-1">No Records</h3>
-					<p className="text-slate-500 text-xs font-medium mb-6">
-						{search ? "No matches found." : "No records initialized yet."}
-					</p>
-					{!search && (
-						<Button
-							onClick={openAdd}
-							size="sm"
-							className="px-6 rounded-lg font-bold"
-						>
-							<FiPlus className="mr-2" /> Add Record
-						</Button>
-					)}
-				</div>
-			) : (
-				<div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
-					<div className="overflow-x-auto text-xs">
-						<table className="w-full border-collapse">
-							<thead>
-								<tr className="bg-slate-50 border-b border-slate-100">
-									<th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-										Date
-									</th>
-									<th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-										Category
-									</th>
-									<th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-										Description
-									</th>
-									<th className="px-6 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-										Amount
-									</th>
-									<th className="px-6 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-slate-50">
-								{filtered.map((t: any) => (
-									<tr
-										key={t._id}
-										className="group hover:bg-slate-50 transition-colors"
-									>
-										<td className="px-6 py-4">
-											<div className="flex flex-col">
-												<span className="font-bold text-slate-900 leading-none">
-													{new Date(t.date).toLocaleDateString("en-IN", {
-														day: "2-digit",
-														month: "short",
-													})}
-												</span>
-											</div>
-										</td>
-										<td className="px-6 py-4">
-											<span
-												className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border"
-												style={{
-													backgroundColor:
-														`${t.category?.color_code}10` || "#f1f5f9",
-													color: t.category?.color_code || "#64748b",
-													borderColor:
-														`${t.category?.color_code}20` || "#e2e8f0",
-												}}
-											>
-												{typeof t.category === "object" ? t.category?.name : (t.category || "General")}
-											</span>
-										</td>
-										<td className="px-6 py-4 text-slate-600 font-medium max-w-[200px] truncate">
-											{t.description || (
-												<span className="text-slate-300 italic opacity-50">
-													—
-												</span>
-											)}
-										</td>
-										<td className="px-6 py-4 text-right whitespace-nowrap">
-											<div className="flex flex-col items-end">
-												<span
-													className={`text-sm font-extrabold tracking-tight ${t.type === "income" ? "text-emerald-500" : "text-slate-900"}`}
-												>
-													{t.type === "income" ? "+" : "−"}₹
-													{t.amount.toLocaleString()}
-												</span>
-												<span
-													className={`flex items-center gap-1 text-[8px] font-bold uppercase ${t.type === "income" ? "text-emerald-400" : "text-slate-300"}`}
-												>
-													{t.type}
-												</span>
-											</div>
-										</td>
-										<td className="px-6 py-4 text-right">
-											<div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-												<button
-													type="button"
-													onClick={() => openEdit(t)}
-													className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 bg-white border border-slate-100 hover:text-primary hover:border-primary/30 transition-all"
-												>
-													<FiEdit2 size={12} />
-												</button>
-												<button
-													type="button"
-													onClick={() => deleteMut.mutate(t._id)}
-													className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 bg-white border border-slate-100 hover:text-rose-500 hover:border-rose-200 transition-all"
-												>
-													<FiTrash2 size={12} />
-												</button>
-											</div>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			)}
+            {/* ── Ledger Table ── */}
+            <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-accent/40 border-b border-border/60 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-4">Date</th>
+                                <th className="px-6 py-4">Category</th>
+                                <th className="px-6 py-4">Description</th>
+                                <th className="px-6 py-4 text-right">Amount</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60 bg-white">
+                            {filtered.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-20 text-center text-sm text-muted-foreground font-medium">
+                                        No transactions found matching your criteria.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtered.map((t: Transaction) => (
+                                    <tr key={t._id} className="group hover:bg-accent/40 transition-colors">
+                                        <td className="px-6 py-4 text-sm font-semibold text-foreground">
+                                            {new Date(t.date).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-xs">
+                                            <span className="px-2 py-0.5 bg-accent/60 border border-border rounded font-bold text-muted-foreground">
+                                                {typeof t.category === "object" ? t.category.name : t.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-muted-foreground font-medium truncate max-w-[200px]">{t.description || "—"}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <span className={`text-sm font-bold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                                                {t.type === "income" ? "+" : "-"}₹{t.amount.toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => openEdit(t)} className="p-2 bg-white text-muted-foreground hover:text-foreground border border-border shadow-sm hover:border-border/80 rounded-lg transition-all"><FiEdit2 size={13} /></button>
+                                                <button onClick={() => setConfirmDeleteId(t._id)} className="p-2 bg-white text-muted-foreground hover:text-red-500 border border-border shadow-sm hover:bg-red-500/5 hover:border-red-500/30 rounded-lg transition-all"><FiTrash2 size={13} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-			{/* ─── Record Modal ─── */}
-			{modalOpen && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-					{/* Backdrop */}
-					<div
-						className="absolute inset-0 bg-slate-900/40"
-						onClick={closeModal}
-					/>
-					{/* Panel */}
-					<div className="relative bg-white rounded-xl border border-slate-100 w-full max-w-sm max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
-						{/* Header */}
-						<div className="flex items-center justify-between p-5 border-b border-slate-100">
-							<div>
-								<h2 className="font-heading font-extrabold text-lg text-slate-900">
-									{editingTx ? "Edit Entry" : "New Entry"}
-								</h2>
-							</div>
-							<button
-								type="button"
-								onClick={closeModal}
-								className="w-8 h-8 rounded-md bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500"
-							>
-								<FiX size={16} />
-							</button>
-						</div>
+            {/* ── Add/Edit Modal ── */}
+            {modalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-card border border-border/50 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-up">
+                        <div className="p-6 border-b border-border/50 flex items-center justify-between">
+                            <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                                {editingTx ? "Edit Transaction" : "New Transaction"}
+                            </h2>
+                            <button onClick={closeModal} className="text-muted-foreground hover:text-foreground p-1 transition-all hover:bg-accent rounded-full"><FiX size={18} /></button>
+                        </div>
+                        
+                        <form onSubmit={handleSave} className="p-6 space-y-6">
+                            {error && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded text-center font-medium">{error}</div>}
 
-						{/* Form */}
-						<form onSubmit={handleSave} className="p-5 space-y-4">
-							{error && (
-								<div className="p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-600 text-[10px] font-bold animate-in shake duration-300">
-									{error}
-								</div>
-							)}
+                            <div className="bg-input p-1 rounded flex border border-border">
+                                {(["expense", "income"] as const).map(type => (
+                                    <button
+                                        key={type}
+                                        type="button"
+                                        onClick={() => setForm(f => ({ ...f, type }))}
+                                        className={`flex-1 py-2 text-xs font-medium rounded transition-all ${form.type === type ? "bg-primary text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
+                                    >
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
 
-							{/* Type toggle */}
-							<div className="bg-slate-50 p-1 rounded-lg grid grid-cols-2 gap-1 border border-slate-100">
-								<button
-									type="button"
-									onClick={() =>
-										setForm((f) => ({ ...f, type: "expense", category: "" }))
-									}
-									className={`py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${
-										form.type === "expense"
-											? "bg-white text-slate-900 border border-slate-100 shadow-sm"
-											: "text-slate-400 hover:text-slate-600"
-									}`}
-								>
-									Expense
-								</button>
-								<button
-									type="button"
-									onClick={() =>
-										setForm((f) => ({ ...f, type: "income", category: "" }))
-									}
-									className={`py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${
-										form.type === "income"
-											? "bg-white text-emerald-600 border border-slate-100 shadow-sm"
-											: "text-slate-400 hover:text-slate-600"
-									}`}
-								>
-									Income
-								</button>
-							</div>
-
-							<div className="space-y-4">
-								{/* Amount */}
-								<div className="space-y-1">
-									<Label className="text-[9px] font-bold uppercase tracking-widest text-slate-400 ml-0.5">
-										Amount (INR)
-									</Label>
-									<div className="relative">
-										<span className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-slate-300">
-											₹
-										</span>
-										<Input
-											id="amount"
-											type="number"
-											step="0.01"
-											min="0.01"
-											required
-											value={form.amount}
-											onChange={(e) =>
-												setForm((f) => ({ ...f, amount: e.target.value }))
-											}
-											className="h-12 pl-10 rounded-lg border-slate-200 bg-white text-xl font-black tracking-tight"
-											placeholder="0.00"
-										/>
-									</div>
-								</div>
-
-								<div className="grid grid-cols-2 gap-4">
-									{/* Category */}
-									<div className="space-y-1">
-										<Label className="text-[9px] font-bold uppercase tracking-widest text-slate-400 ml-0.5">
-											Category
-										</Label>
-										<div className="relative">
-											<FiTag
-												size={12}
-												className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-											/>
-											<select
-												id="cat"
-												required
-												value={form.category}
-												onChange={(e) =>
-													setForm((f) => ({ ...f, category: e.target.value }))
-												}
-												className="w-full h-10 pl-9 pr-3 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-primary transition-colors appearance-none"
-											>
-												<option value="">Select</option>
-												{activeCategories.map((c: any) => (
-													<option key={c._id} value={c._id}>
-														{c.name}
-													</option>
-												))}
-											</select>
-										</div>
-									</div>
-
-									{/* Date */}
-									<div className="space-y-1">
-										<Label className="text-[9px] font-bold uppercase tracking-widest text-slate-400 ml-0.5">
-											Date
-										</Label>
-										<div className="relative">
-											<FiCalendar
-												size={12}
-												className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-											/>
-											<Input
-												id="date"
-												type="date"
-												required
-												value={form.date}
-												onChange={(e) =>
-													setForm((f) => ({ ...f, date: e.target.value }))
-												}
-												className="h-10 pl-9 rounded-lg border-slate-200 bg-white text-[11px] font-bold"
-											/>
-										</div>
-									</div>
-								</div>
-
-								{/* Description */}
-								<div className="space-y-1">
-									<Label className="text-[9px] font-bold uppercase tracking-widest text-slate-400 ml-0.5">
-										Notes
-									</Label>
-									<textarea
-										id="desc"
-										value={form.description}
-										onChange={(e) =>
-											setForm((f) => ({ ...f, description: e.target.value }))
-										}
-										rows={2}
-										placeholder="Record details..."
-										className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-700 outline-none focus:border-primary resize-none transition-colors"
-									/>
-								</div>
-							</div>
-
-							{/* Actions */}
-							<div className="flex gap-2 pt-2">
-								<Button
-									type="button"
-									variant="outline"
-									onClick={closeModal}
-									className="flex-1 h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest"
-								>
-									Cancel
-								</Button>
-								<Button
-									type="submit"
-									disabled={saveMut.isPending}
-									className="flex-1 h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-slate-900 text-white"
-								>
-									{saveMut.isPending ? (
-										<LoadingSpinner size="sm" />
-									) : editingTx ? (
-										"Update"
-									) : (
-										"Secure"
-									)}
-								</Button>
-							</div>
-						</form>
-					</div>
-				</div>
-			)}
-		</div>
-	);
+                            <div className="space-y-4">
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Amount (₹)</Label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={form.amount}
+                                        onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+                                        className="w-full h-11 px-4 bg-input border border-border rounded text-lg font-medium outline-none focus:border-primary/50 transition-all"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</Label>
+                                        <select
+                                            value={form.category}
+                                            required
+                                            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                                            className="w-full h-11 bg-input border border-border rounded px-3 text-sm outline-none focus:border-primary/50 transition-all"
+                                        >
+                                            <option value="">Select...</option>
+                                            {categories.map((c: Category) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Date</Label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={form.date}
+                                            onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                                            className="w-full h-11 bg-input border border-border rounded px-4 text-sm outline-none focus:border-primary/50 transition-all"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
+                                    <textarea
+                                        value={form.description}
+                                        onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                        className="w-full p-4 bg-input border border-border rounded text-sm h-24 resize-none outline-none focus:border-primary/50 transition-all"
+                                        placeholder="Add more details..."
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={saveMut.isPending}
+                                className="w-full h-12 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center shadow-sm"
+                            >
+                                {saveMut.isPending ? "Processing..." : editingTx ? "Update Transaction" : "Save Transaction"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default TransactionsList;

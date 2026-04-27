@@ -7,6 +7,9 @@ import {
 	updateTransaction,
 	deleteTransaction,
 	getCategories,
+	createCategory,
+	updateCategory,
+	deleteCategory,
 } from "../controllers/transactionController";
 
 const router = Router();
@@ -55,11 +58,28 @@ const updateTransactionValidation = [
 		.withMessage("Invalid date format. Use ISO 8601 format (e.g., 2026-04-09)"),
 ];
 
+// Validation middleware for creating category
+const categoryValidation = [
+	body("name")
+		.trim()
+		.isLength({ min: 1, max: 50 })
+		.withMessage("Category name must be between 1 and 50 characters"),
+	body("color_code")
+		.optional()
+		.isHexColor()
+		.withMessage("Invalid color code format"),
+];
+
 // All routes are protected with JWT authentication
 router.use(protect);
 
-// Routes
+// Category Routes
 router.get("/categories", getCategories);
+router.post("/categories", categoryValidation, createCategory);
+router.put("/categories/:id", categoryValidation, updateCategory);
+router.delete("/categories/:id", deleteCategory);
+
+// Transaction Routes
 router.post("/", createTransactionValidation, createTransaction);
 router.get("/", getTransactions);
 router.put("/:id", updateTransactionValidation, updateTransaction);
