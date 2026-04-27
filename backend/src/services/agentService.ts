@@ -127,45 +127,60 @@ const batchAddTransactionsTool = tool(
 			date?: string;
 		}>;
 	}) => {
+		console.log(`📝 batch_add_transactions called for user ${userId} with ${transactions.length} transactions`);
 		const createdRows: TransactionRow[] = [];
 
 		for (const t of transactions) {
-			let categoryDoc = await Category.findOne({
-				name: { $regex: new RegExp(`^${t.category_name}$`, "i") },
-			});
+			try {
+				console.log(`🔍 Looking for category: ${t.category_name}`);
+				let categoryDoc = await Category.findOne({
+					name: { $regex: new RegExp(`^${t.category_name}$`, "i") },
+				});
 
-			if (!categoryDoc) {
-				const predefinedColors = [
-					"#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
-					"#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16"
-				];
-				const randomColor = predefinedColors[Math.floor(Math.random() * predefinedColors.length)];
+				if (!categoryDoc) {
+					console.log(`➕ Creating new category: ${t.category_name}`);
+					const predefinedColors = [
+						"#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
+						"#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16"
+					];
+					const randomColor = predefinedColors[Math.floor(Math.random() * predefinedColors.length)];
 
-				categoryDoc = await Category.create({
-					name: t.category_name.charAt(0).toUpperCase() + t.category_name.slice(1),
-					color_code: randomColor,
-					isDefault: false,
-					user: new mongoose.Types.ObjectId(userId)
+					categoryDoc = await Category.create({
+						name: t.category_name.charAt(0).toUpperCase() + t.category_name.slice(1),
+						color_code: randomColor,
+						isDefault: false,
+						user: new mongoose.Types.ObjectId(userId)
+					});
+					console.log(`✅ Category created: ${categoryDoc.name} (ID: ${categoryDoc._id})`);
+				}
+
+				console.log(`💾 Creating transaction: ${t.description} - ₹${t.amount}`);
+				const tx = await Transaction.create({
+					user_id: new mongoose.Types.ObjectId(userId),
+					amount: t.amount,
+					type: t.type,
+					category: categoryDoc._id,
+					description: t.description,
+					date: t.date ? new Date(t.date) : new Date(),
+				});
+				console.log(`✅ Transaction created: ${tx._id}`);
+
+				createdRows.push({
+					_id: tx._id.toString(),
+					amount: t.amount,
+					type: t.type,
+					category: categoryDoc.name,
+					description: t.description,
+					date: (t.date ? new Date(t.date) : new Date()).toISOString().split("T")[0],
+				});
+			} catch (error) {
+				console.error(`❌ Error creating transaction for ${t.description}:`, error);
+				return JSON.stringify({
+					success: false,
+					error: error instanceof Error ? error.message : String(error),
+					failedTransaction: t,
 				});
 			}
-
-			const tx = await Transaction.create({
-				user_id: new mongoose.Types.ObjectId(userId),
-				amount: t.amount,
-				type: t.type,
-				category: categoryDoc._id,
-				description: t.description,
-				date: t.date ? new Date(t.date) : new Date(),
-			});
-
-			createdRows.push({
-				_id: tx._id.toString(),
-				amount: t.amount,
-				type: t.type,
-				category: categoryDoc.name,
-				description: t.description,
-				date: (t.date ? new Date(t.date) : new Date()).toISOString().split("T")[0],
-			});
 		}
 
 		return JSON.stringify({
