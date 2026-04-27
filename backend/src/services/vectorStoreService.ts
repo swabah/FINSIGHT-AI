@@ -110,16 +110,23 @@ export const checkAndUpsertEmbeddings = async (
 
 	// Add new documents to vector store (auto-generates embeddings)
 	if (chunks.length > 0) {
-		await vectorStore!.addDocuments(
-			chunks.map((chunk, index) => ({
-				pageContent: chunk,
-				metadata: {
-					userId,
-					chunkIndex: index,
-					timestamp: new Date(),
-				},
-			})),
-		);
+		console.log(`📤 Adding ${chunks.length} chunks to vector store...`);
+		try {
+			await vectorStore!.addDocuments(
+				chunks.map((chunk, index) => ({
+					pageContent: chunk,
+					metadata: {
+						userId,
+						chunkIndex: index,
+						timestamp: new Date(),
+					},
+				})),
+			);
+			console.log(`✅ Successfully added ${chunks.length} chunks with embeddings`);
+		} catch (embedError) {
+			console.error("❌ Error generating embeddings:", embedError);
+			throw embedError;
+		}
 	}
 
 	// Update cache state
