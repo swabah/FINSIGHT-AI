@@ -18,6 +18,9 @@ dotenv.config();
 // Initialize Express app
 const app: Application = express();
 
+// Trust proxy (required for Render and other reverse proxies)
+app.set("trust proxy", 1);
+
 // Security Middleware (must be before routes)
 app.use(helmet());
 app.use(compression());
