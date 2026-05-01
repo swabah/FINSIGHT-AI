@@ -3,20 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "frontend",
-    "backend"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
-    "build": "npm run build -w backend && npm run build -w frontend",
-    "build:backend": "npm run build -w backend",
-    "build:frontend": "npm run build -w frontend",
-    "start": "npm run start -w backend"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "turbo": "^2.0.0"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "packageManager": "bun@1.3.11"
 }

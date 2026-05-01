@@ -39,6 +39,9 @@ pnpm-debug.log*
 # Bun
 .bun/
 
+# Turbo
+.turbo/
+
 # Testing
 coverage/
 

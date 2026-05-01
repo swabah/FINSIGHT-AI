@@ -1,25 +1,22 @@
 {
-	"name": "finsight-ai-backend",
+	"name": "@finsight/backend",
 	"version": "1.0.0",
 	"description": "FinSight AI Backend - RAG-Driven Personal Finance Manager",
 	"main": "dist/server.js",
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --watch src/server.ts",
-		"start": "node dist/server.js",
-		"start:bun": "bun run src/server.ts",
+		"start": "bun run src/server.ts",
 		"build": "tsc -p tsconfig.prod.json",
-		"build:clean": "rm -rf dist && npm run build",
-		"db:reset": "node dist/scripts/resetDb.js"
+		"build:clean": "rm -rf dist && bun run build",
+		"db:reset": "bun run dist/scripts/resetDb.js"
 	},
 	"private": true,
-	"engines": {
-		"node": ">=18.0.0"
-	},
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
 	"dependencies": {
+		"@finsight/shared": "*",
 		"@langchain/core": "^1.1.39",
 		"@langchain/google-genai": "^2.1.26",
 		"@langchain/mongodb": "^1.1.0",
@@ -28,6 +25,7 @@
 		"@types/compression": "^1.7.5",
 		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
+		"@types/express-serve-static-core": "^5.1.1",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/uuid": "^10.0.0",
 		"bcryptjs": "^3.0.3",
@@ -43,6 +41,7 @@
 		"mongodb": "^7.1.1",
 		"mongoose": "^9.4.1",
 		"typescript": "^5.8.3",
-		"uuid": "^13.0.0"
+		"uuid": "^13.0.0",
+		"zod": "^4.4.1"
 	}
 }
