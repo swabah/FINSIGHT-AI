@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import KPICard from '../KPICard';
-import React from 'react';
+import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 // Mock the react timer logic inside KPICard
 beforeAll(() => {

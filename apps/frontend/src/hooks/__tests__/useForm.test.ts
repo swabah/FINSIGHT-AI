@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForm } from '../useForm';
-import { ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 
 describe('useForm Hook', () => {
   it('should initialize with initial state', () => {
