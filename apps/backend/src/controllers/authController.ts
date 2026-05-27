@@ -161,3 +161,69 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 		});
 	}
 };
+
+// @desc    Update user profile
+// @route   PUT /api/auth/me
+// @access  Private
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const { username, email, password } = req.body;
+		const user = await User.findById(req.user!._id);
+		
+		if (!user) {
+			res.status(404).json({ success: false, message: "User not found" });
+			return;
+		}
+
+		if (username) user.username = username;
+		if (email) user.email = email;
+		if (password) user.password_hash = password; // Will be hashed by pre-save middleware
+
+		await user.save();
+		
+		res.status(200).json({ 
+			success: true, 
+			message: "User updated successfully",
+			data: {
+				id: user._id,
+				username: user.username,
+				email: user.email
+			}
+		});
+	} catch (error: any) {
+		console.error("Update user error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error updating user",
+			error: error.message,
+		});
+	}
+};
+
+// @desc    Delete user account and associated data
+// @route   DELETE /api/auth/me
+// @access  Private
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const userId = req.user!._id;
+		
+		// Optional: delete associated transactions and chats if models are imported
+		// await Transaction.deleteMany({ user_id: userId });
+		// await ChatLog.deleteMany({ user_id: userId });
+
+		await User.findByIdAndDelete(userId);
+		
+		res.status(200).json({ 
+			success: true, 
+			message: "User deleted successfully" 
+		});
+	} catch (error: any) {
+		console.error("Delete user error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error deleting user",
+			error: error.message,
+		});
+	}
+};
+
