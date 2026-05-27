@@ -197,7 +197,7 @@ const batchAddTransactionsTool = tool(
 		description:
 			"Creates one or MORE financial transactions (income or expense) in the user's ledger simultaneously. Use this whether the user provides 1 item or 10 items in a list (e.g. tracking a shopping receipt).",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 			transactions: z.array(
 				z.object({
 					amount: z.number().min(0.01).describe("Transaction amount in INR"),
@@ -266,7 +266,7 @@ const listTransactionsTool = tool(
 		description:
 			"Fetches transactions as structured rows for tabular display. Use when user asks to 'show', 'list', 'view', 'display' transactions.",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 			type: z.enum(["income", "expense"]).optional().describe("Filter by type"),
 			category_name: z.string().optional().describe("Filter by category name"),
 			limit: z.number().int().min(1).max(100).optional().describe("Max rows to return"),
@@ -303,7 +303,7 @@ const getBalanceTool = tool(
 		name: "get_balance",
 		description: "Use this exclusively when the user asks for 'balance' or 'current balance'. Do not use for general analysis.",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 		}),
 	}
 );
@@ -364,7 +364,7 @@ const visualizeFinancesTool = tool(
 		name: "visualize_finances",
 		description: "Use this to generate visual charts. Triggers when the user explicitly asks for a chart, visualization, or visual category breakdown.",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 			type: z.enum(["income", "expense", "both"]).optional().describe("Which type of transactions to visualize. Defaults to 'both' if not specified.")
 		}),
 	}
@@ -426,7 +426,7 @@ const searchAndRequestDeleteTool = tool(
 		description:
 			"Searches for transactions the user wants to delete and returns all candidates for them to confirm. Use when user says 'delete', 'remove', 'erase'. Always show candidates first — never delete directly.",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 			keyword: z.string().optional().describe("Keyword found in description (e.g. 'Zomato')"),
 			type: z.enum(["income", "expense"]).optional(),
 			category_name: z.string().optional(),
@@ -453,7 +453,7 @@ const executeDeleteTransactionTool = tool(
 		description:
 			"Permanently deletes a specific transaction. Only call this after the user has explicitly confirmed which transaction to delete (you have the ID).",
 		schema: z.object({
-			userId: z.string(),
+			userId: z.string().optional(),
 			transaction_id: z.string().describe("MongoDB ObjectId of the transaction to delete"),
 		}),
 	},
@@ -499,7 +499,7 @@ const SYSTEM_PROMPT = `You are FinSight AI, a highly intuitive, warm, and hyper-
 - **For Analysis**: Keep it short! Highlight the top takeaway and use markdown lists or bolding.
 - **For Actions**: Naturally confirm what was done. Example: "I've gone ahead and logged your ₹500 lunch expense."
 - **For Deletions**: Say something friendly like, "I found these matching transactions. Could you let me know which one you'd like to remove?"
-- **For Charts/Visualizations**: NEVER generate markdown images, markdown links, or external URLs for charts! The UI automatically renders charts natively. Just acknowledge it by saying something like "Here is the visual breakdown of your finances:".
+- **For Charts/Visualizations**: You MUST call the \`visualize_finances\` tool to trigger the chart generation in the UI! NEVER generate markdown images, markdown links, or external URLs for charts! The UI automatically renders charts natively based on the tool's output. Just acknowledge it by saying something like "Here is the visual breakdown of your finances:".
 - **Format**: ALWAYS use ₹ (Indian Rupee) and valid Markdown natively. DO NOT generate image tags like \`![chart](...)\`.`;
 
 // ─────────────────────────────────────────────────────────────────────────────
