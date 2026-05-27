@@ -18,9 +18,9 @@ import { z } from "zod";
 import Transaction from "../models/Transaction.js";
 import Category from "../models/Category.js";
 import mongoose from "mongoose";
-import { stringifyTransactions } from "../utils/transactionStringifier.js";
+import { stringifyTransactions, stringifyTransactionsWithRows } from "../utils/transactionStringifier.js";
 import { checkAndUpsertEmbeddings, searchSimilarTransactions } from "./vectorStoreService.js";
-import { getRecentTransactions } from "../utils/transactionSearch.js";
+import { getRecentTransactions, getRecentTransactionsWithRows } from "../utils/transactionSearch.js";
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage, type BaseMessage } from "@langchain/core/messages";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,20 +83,24 @@ const llm = new ChatGoogleGenerativeAI({
 const analyzeFinancesTool = tool(
 	async ({ query, userId }: { query: string; userId: string }) => {
 		// Refresh embeddings only if dirty
-		const chunks = await stringifyTransactions(userId);
+		const chunks = await stringifyTransactionsWithRows(userId);
 		if (chunks.length === 0) return JSON.stringify({ text: "No transactions found." });
 
 		await checkAndUpsertEmbeddings(userId, chunks);
 
 		let contextChunks: string[] = [];
+		let transactions: TransactionRow[] = [];
 		const results = await searchSimilarTransactions(query, userId, 12);
 		if (results.length > 0) {
 			contextChunks = results.map((r) => r.text);
+			transactions = results.map((r) => r.metadata.row).filter(Boolean);
 		} else {
-			contextChunks = await getRecentTransactions(userId, 20);
+			const recent = await getRecentTransactionsWithRows(userId, 20);
+			contextChunks = recent.map((r) => r.text);
+			transactions = recent.map((r) => r.row);
 		}
 
-		return JSON.stringify({ context: contextChunks });
+		return JSON.stringify({ context: contextChunks, transactions });
 	},
 	{
 		name: "analyze_finances",
@@ -565,6 +569,10 @@ export const runAgentPipeline = async (
 				rawToolOutput = (await analyzeFinancesTool.invoke(args as any)) as string;
 				const parsed = JSON.parse(rawToolOutput);
 				if (parsed.context) contextUsed.push(...parsed.context);
+				if (parsed.transactions && parsed.transactions.length > 0) {
+					messageType = "table";
+					actionData = { transactions: parsed.transactions };
+				}
 			} else if (tc.name === "get_balance") {
 				rawToolOutput = (await getBalanceTool.invoke(args as any)) as string;
 			} else if (tc.name === "visualize_finances") {

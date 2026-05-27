@@ -71,3 +71,64 @@ export const stringifyTransactions = async (
 		return [];
 	}
 };
+
+export interface TransactionRowData {
+	_id: string;
+	date: string;
+	description: string;
+	category: string;
+	type: "income" | "expense";
+	amount: number;
+}
+
+export interface TransactionChunk {
+	text: string;
+	row: TransactionRowData;
+}
+
+export const stringifyTransactionsWithRows = async (
+	userId: string,
+	limit: number = 100,
+): Promise<TransactionChunk[]> => {
+	try {
+		const transactions = await Transaction.find({
+			user_id: new mongoose.Types.ObjectId(userId),
+		})
+			.populate("category", "name")
+			.sort({ date: -1 }) // Newest first
+			.limit(limit)
+			.lean();
+
+		if (transactions.length === 0) {
+			return [];
+		}
+
+		return transactions.map((transaction) => {
+			const dateStr = formatDate(transaction.date);
+			const categoryName = (transaction.category as any)?.name || "Unknown";
+			const description = transaction.description;
+
+			let text = "";
+			if (transaction.type === "expense") {
+				text = `On ${dateStr}, spent ₹${transaction.amount.toFixed(2)} on ${categoryName} (${description})`;
+			} else {
+				text = `On ${dateStr}, received ₹${transaction.amount.toFixed(2)} from ${categoryName} (${description})`;
+			}
+
+			return {
+				text,
+				row: {
+					_id: transaction._id.toString(),
+					date: new Date(transaction.date).toISOString().split("T")[0],
+					description: transaction.description,
+					category: categoryName,
+					type: transaction.type,
+					amount: transaction.amount,
+				},
+			};
+		});
+	} catch (error) {
+		console.error("Error stringifying transactions with rows:", error);
+		return [];
+	}
+};

@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import TransactionsList from "./pages/TransactionsList";
 import Categories from "./pages/Categories";
 import Chat from "./pages/Chat";
+import Analytics from "./pages/Analytics";
 
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -41,6 +42,14 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<Layout><TransactionsList /></Layout>
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/analytics"
+					element={
+						<ProtectedRoute>
+							<Layout><Analytics /></Layout>
 						</ProtectedRoute>
 					}
 				/>

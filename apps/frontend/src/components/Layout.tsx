@@ -10,6 +10,7 @@ import {
 	FiTag,
 	FiMessageSquare,
 	FiPieChart,
+	FiBarChart2,
 	FiChevronLeft,
 	FiChevronRight,
 } from "react-icons/fi";
@@ -18,6 +19,7 @@ import ConfirmModal from "./ConfirmModal";
 const NAV_ITEMS = [
 	{ to: "/chat", icon: <FiMessageSquare />, label: "Chat" },
 	{ to: "/dashboard", icon: <FiPieChart />, label: "Overview" },
+	{ to: "/analytics", icon: <FiBarChart2 />, label: "Analytics" },
 	{ to: "/transactions", icon: <FiList />, label: "Transactions" },
 	{ to: "/categories", icon: <FiTag />, label: "Categories" },
 ];

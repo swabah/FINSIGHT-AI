@@ -4,6 +4,7 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import EmbeddingCache from "../models/EmbeddingCache.js";
 import Transaction from "../models/Transaction.js";
 import mongoose from "mongoose";
+import type { TransactionChunk } from "../utils/transactionStringifier.js";
 
 // Initialize MongoDB client for vector store
 const mongoURI = process.env.MONGODB_URI;
@@ -81,7 +82,7 @@ export const markDirty = async (userId: string): Promise<void> => {
  */
 export const checkAndUpsertEmbeddings = async (
 	userId: string,
-	chunks: string[],
+	chunks: string[] | TransactionChunk[],
 ): Promise<void> => {
 	if (!collection) throw new Error("Vector store not initialized");
 
@@ -113,14 +114,18 @@ export const checkAndUpsertEmbeddings = async (
 		console.log(`📤 Adding ${chunks.length} chunks to vector store...`);
 		try {
 			await vectorStore!.addDocuments(
-				chunks.map((chunk, index) => ({
-					pageContent: chunk,
-					metadata: {
-						userId,
-						chunkIndex: index,
-						timestamp: new Date(),
-					},
-				})),
+				chunks.map((chunk, index) => {
+					const isString = typeof chunk === "string";
+					return {
+						pageContent: isString ? chunk : chunk.text,
+						metadata: {
+							userId,
+							chunkIndex: index,
+							...(isString ? {} : { row: chunk.row }),
+							timestamp: new Date(),
+						},
+					};
+				}),
 			);
 			console.log(`✅ Successfully added ${chunks.length} chunks with embeddings`);
 		} catch (embedError) {

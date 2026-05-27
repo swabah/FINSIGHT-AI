@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchTransactions, fetchCategories } from "../services/transactionService";
 import { getAuthData } from "../services/authService";
-import { FiArrowUpRight, FiArrowDownRight, FiActivity, FiTag, FiCreditCard, FiTrendingUp } from "react-icons/fi";
+import { FiArrowUpRight, FiArrowDownRight, FiActivity, FiTag, FiCreditCard, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
+import MonthlyBarChart from "../components/charts/MonthlyBarChart";
+import { getMonthlyData } from "../utils/chartHelpers";
 
 const Dashboard = () => {
     const auth = getAuthData();
@@ -35,6 +37,7 @@ const Dashboard = () => {
     const income = transactions.filter((t: any) => t.type === "income").reduce((acc: number, t: any) => acc + t.amount, 0);
     const expense = transactions.filter((t: any) => t.type === "expense").reduce((acc: number, t: any) => acc + t.amount, 0);
     const balance = income - expense;
+    const monthlyData = getMonthlyData(transactions);
 
     return (
         <div className="space-y-8 pb-20">
@@ -61,6 +64,23 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* ── Monthly Comparison (Chart) ── */}
+                <div className="lg:col-span-12 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-2">
+                            <FiBarChart2 className="text-primary" />
+                            <h3 className="text-base font-medium">Monthly Overview</h3>
+                        </div>
+                    </div>
+                    <div className="p-6 bg-card border border-border rounded-lg">
+                        <MonthlyBarChart 
+                            labels={monthlyData.labels}
+                            incomeData={monthlyData.incomeData}
+                            expenseData={monthlyData.expenseData}
+                        />
+                    </div>
+                </div>
+
                 {/* ── Recent Activity ── */}
                 <div className="lg:col-span-8 space-y-6">
                     <div className="flex items-center justify-between px-2">
