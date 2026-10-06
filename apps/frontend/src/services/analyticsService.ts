@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AnalyticsResponse } from "../types/analytics";
 
 const API_BASE_URL =
-	import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+	import.meta.env.VITE_API_URL || "https://finsight-ai-ca52.onrender.com/api";
 
 export const fetchAnalyticsStats = async (
 	token: string,

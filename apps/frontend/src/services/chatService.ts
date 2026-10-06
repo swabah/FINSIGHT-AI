@@ -6,7 +6,7 @@ import type {
 	ConversationsResponse,
 } from "../types/chat";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://finsight-ai-ca52.onrender.com/api";
 
 const authHeaders = (token: string) => ({
 	Authorization: `Bearer ${token}`,

@@ -4,7 +4,7 @@
  * Run in browser console: import('./src/utils/apiDebug.ts')
  */
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://finsight-ai-ca52.onrender.com/api";
 
 interface TestResult {
 	endpoint: string;
