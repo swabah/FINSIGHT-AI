@@ -1,151 +1,159 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import {
 	FiActivity,
 	FiShield,
 	FiPieChart,
 	FiChevronRight,
 	FiCheckCircle,
+    FiMessageSquare,
 } from "react-icons/fi";
 
 const Landing: React.FC = () => {
 	const navigate = useNavigate();
 
 	return (
-		<div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-primary/20 overflow-hidden relative">
-			{/* Background elements */}
-			<div className="absolute top-0 left-0 w-full h-[600px] bg-mesh opacity-60 pointer-events-none" />
-			<div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+		<div className="min-h-screen bg-[#eef0f3] text-[#1c1c21] font-sans selection:bg-primary/20 overflow-hidden relative">
+			{/* Soft background glow elements */}
+			<div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
+			<div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none translate-y-1/3 -translate-x-1/3" />
 
 			{/* Navbar */}
-			<nav className="h-20 flex items-center justify-between px-8 md:px-12 fixed top-0 inset-x-0 bg-white/70 backdrop-blur-xl z-[100] border-b border-slate-100">
-				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-						<FiActivity size={22} />
-					</div>
-					<span className="font-heading font-black text-xl tracking-tighter">
-						FinSight<span className="text-primary italic">AI</span>
-					</span>
-				</div>
-				<div className="flex items-center gap-4">
-					<Button
-						variant="ghost"
-						onClick={() => navigate("/login")}
-						className="h-11 px-6 rounded-xl text-xs font-extrabold uppercase tracking-widest text-slate-600 hover:text-slate-900"
-					>
-						Sign In
-					</Button>
-					<Button
-						onClick={() => navigate("/register")}
-						className="h-11 px-8 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-slate-900 text-white shadow-xl shadow-slate-200 hover:bg-black transition-all"
-					>
-						Get Started
-					</Button>
-				</div>
+			<nav className="h-24 flex items-center fixed top-0 inset-x-0 bg-[#eef0f3]/80 backdrop-blur-2xl z-[100]">
+				<div className="max-w-6xl mx-auto w-full px-8 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-primary font-bold text-lg md:text-xl">
+                            F
+                        </div>
+                        <span className="font-heading font-bold text-xl md:text-2xl tracking-tight">
+                            FinSight
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 md:gap-4">
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="h-10 md:h-12 px-4 md:px-8 rounded-full text-xs md:text-sm font-bold text-foreground hover:bg-white transition-all shadow-sm bg-transparent"
+                        >
+                            Sign In
+                        </button>
+                        <button
+                            onClick={() => navigate("/register")}
+                            className="h-10 md:h-12 px-4 md:px-8 rounded-full text-xs md:text-sm font-bold bg-primary text-white shadow-[0_8px_20px_rgba(5,150,105,0.2)] hover:-translate-y-0.5 transition-all"
+                        >
+                            Get Started
+                        </button>
+                    </div>
+                </div>
 			</nav>
 
 			{/* Hero Section */}
-			<section className="relative px-8 pt-44 pb-24 text-center max-w-5xl mx-auto flex flex-col items-center">
-				<div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-2xl bg-white border border-slate-100 shadow-sm mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-					<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-					<span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
-						v2.0 Quantum Engine
-					</span>
-				</div>
-				<h1 className="text-5xl md:text-7xl font-heading font-black tracking-tighter mb-8 leading-[0.95] text-slate-900 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-					Command your <br />
-					finance with <span className="text-premium">absolute clarity.</span>
-				</h1>
-				<p className="text-lg md:text-xl text-slate-500 font-medium mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000">
-					Next-generation capital management for tactical decision-making.
-					Analyze, track, and optimize your wealth with AI-native intelligence.
-				</p>
-				<div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto animate-in fade-in slide-in-from-bottom-10 duration-1000">
-					<Button
-						onClick={() => navigate("/register")}
-						className="h-14 px-10 rounded-2xl text-xs font-black uppercase tracking-[0.3em] bg-primary shadow-2xl shadow-primary/25 hover:bg-indigo-700 w-full sm:w-auto transition-all active:scale-95"
-					>
-						Initialize Stack <FiChevronRight className="ml-2" />
-					</Button>
-					<Button
-						variant="outline"
-						className="h-14 px-10 rounded-2xl text-xs font-black uppercase tracking-[0.3em] border-slate-200 bg-white/50 backdrop-blur-sm w-full sm:w-auto hover:bg-white transition-all"
-					>
-						Documentation
-					</Button>
-				</div>
+			<section className="relative pt-48 pb-32 text-center w-full z-10">
+                <div className="max-w-6xl mx-auto w-full px-8 flex flex-col items-center">
+                    <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white shadow-sm mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 hover:shadow-md transition-all cursor-default">
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-xs font-bold text-foreground">
+                            FinSight AI v2.0 is now live
+                        </span>
+                    </div>
+                    <h1 className="text-5xl md:text-[80px] font-heading font-medium tracking-tighter mb-8 leading-[1.05] text-foreground animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-4xl mx-auto">
+                        Your finances, <br />
+                        <span className="text-primary italic font-normal">beautifully</span> organized.
+                    </h1>
+                    <p className="text-lg md:text-xl text-muted-foreground font-medium mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                        Say goodbye to spreadsheets. Chat with FinSight to log expenses, generate insights, and take absolute control of your financial future.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto animate-in fade-in slide-in-from-bottom-10 duration-1000">
+                        <button
+                            onClick={() => navigate("/register")}
+                            className="h-16 px-10 rounded-full text-base font-bold bg-primary text-white shadow-[0_12px_30px_rgba(5,150,105,0.25)] hover:bg-emerald-700 w-full sm:w-auto transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                        >
+                            Create Free Account <FiChevronRight size={20} />
+                        </button>
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="h-16 px-10 rounded-full text-base font-bold bg-white text-foreground shadow-sm hover:shadow-md w-full sm:w-auto transition-all hover:-translate-y-1 flex items-center justify-center"
+                        >
+                            See How It Works
+                        </button>
+                    </div>
+                </div>
 			</section>
 
-			{/* System Capabilities */}
-			<section className="px-8 pb-32 max-w-7xl mx-auto animate-in fade-in duration-1000 delay-500">
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-					<FeatureCard
-						icon={<FiPieChart />}
-						title="High-Value Mapping"
-						desc="Deep categorical decomposition for every operational entry in your ledger."
-						color="indigo"
-					/>
-					<FeatureCard
-						icon={<FiActivity />}
-						title="Velocity Analytics"
-						desc="Real-time monitoring of retention rates and temporal deployment trends."
-						color="emerald"
-					/>
-					<FeatureCard
-						icon={<FiShield />}
-						title="Secure Protocol"
-						desc="Enterprise-grade architecture designed for maximum computational efficiency."
-						color="amber"
-					/>
-				</div>
+			{/* System Capabilities / Features */}
+			<section className="pb-40 w-full animate-in fade-in duration-1000 delay-500 relative z-10">
+                <div className="max-w-6xl mx-auto w-full px-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <FeatureCard
+                            icon={<FiMessageSquare />}
+                            title="Conversational AI"
+                            desc="Just text your expenses. 'I spent $45 on dinner'—FinSight handles the categorization and logging instantly."
+                            color="emerald"
+                        />
+                        <FeatureCard
+                            icon={<FiPieChart />}
+                            title="Visual Analytics"
+                            desc="Beautiful, soft-rendered charts and reports give you an immediate understanding of where your money goes."
+                            color="blue"
+                        />
+                        <FeatureCard
+                            icon={<FiShield />}
+                            title="Secure & Private"
+                            desc="Your data is encrypted and strictly private. We use industry-standard security to keep your finances safe."
+                            color="amber"
+                        />
+                    </div>
 
-				{/* Proof Section */}
-				<div className="mt-20 flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-40 grayscale">
-					<p className="text-[10px] font-black uppercase tracking-[0.4em]">
-						Proprietary Tokenization
-					</p>
-					<p className="text-[10px] font-black uppercase tracking-[0.4em]">
-						Neural Advisory
-					</p>
-					<p className="text-[10px] font-black uppercase tracking-[0.4em]">
-						Quantum Integrity
-					</p>
-				</div>
+                    {/* Aesthetic Graphic Block */}
+                    <div className="mt-32 w-full bg-white rounded-[40px] p-12 shadow-[0_20px_60px_rgba(0,0,0,0.03)] flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden relative">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+                        <div className="md:w-1/2 relative z-10 space-y-6">
+                            <h2 className="text-4xl font-heading font-medium tracking-tight">The easiest way to track wealth.</h2>
+                            <p className="text-muted-foreground text-lg leading-relaxed">Join thousands of users who have upgraded their financial lives. No more manual entry, no more complex tools.</p>
+                            <div className="pt-4 flex gap-6">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-3xl font-bold text-foreground">98%</span>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Accuracy</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-3xl font-bold text-foreground">10x</span>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Faster Logging</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="md:w-1/2 relative z-10 flex flex-col gap-4 w-full">
+                            <div className="bg-[#eef0f3] p-4 rounded-3xl self-end max-w-[80%] rounded-tr-sm">
+                                <p className="text-sm font-medium">I just paid my $120 electricity bill.</p>
+                            </div>
+                            <div className="bg-primary text-white p-4 rounded-3xl self-start max-w-[80%] rounded-tl-sm shadow-sm flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                    <FiCheckCircle />
+                                </div>
+                                <p className="text-sm font-medium">Got it! Logged $120 to Utilities.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 			</section>
 
 			{/* Bottom Footer */}
-			<footer className="px-12 py-16 border-t border-slate-50 bg-slate-50/30 flex flex-col md:flex-row items-center justify-between gap-8">
-				<div className="flex items-center gap-3">
-					<div className="w-7 h-7 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-						<FiActivity size={14} />
-					</div>
-					<span className="font-heading font-black text-sm tracking-tighter">
-						FinSight AI
-					</span>
-				</div>
-				<div className="flex gap-8">
-					<a
-						href="/"
-						className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
-					>
-						Architecture
-					</a>
-					<a
-						href="/"
-						className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
-					>
-						Privacy
-					</a>
-					<a
-						href="/"
-						className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
-					>
-						Legal
-					</a>
-				</div>
-				<p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-					© 2026 Intelligence Engine v2.0
-				</p>
+			<footer className="py-12 border-t border-zinc-200/50 bg-white/30 relative z-10">
+                <div className="max-w-6xl mx-auto w-full px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                            <span className="font-bold text-sm">F</span>
+                        </div>
+                        <span className="font-heading font-bold text-lg tracking-tight">
+                            FinSight
+                        </span>
+                    </div>
+                    <div className="flex gap-8">
+                        <a href="/" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">Twitter</a>
+                        <a href="/" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">GitHub</a>
+                        <a href="/" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
+                    </div>
+                    <p className="text-xs font-bold text-muted-foreground">
+                        © 2026 FinSight AI.
+                    </p>
+                </div>
 			</footer>
 		</div>
 	);
@@ -162,21 +170,18 @@ const FeatureCard = ({
 	desc: string;
 	color: string;
 }) => (
-	<div className="modern-card p-10 bg-white hover-lift ring-1 ring-slate-100 hover:ring-primary/20 transition-all border-none">
+	<div className="bg-white rounded-[32px] p-10 hover:-translate-y-1 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-300 group">
 		<div
-			className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-sm ${color === "indigo" ? "bg-indigo-50 text-indigo-600" : color === "emerald" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}
+			className={`w-16 h-16 rounded-[20px] flex items-center justify-center text-2xl mb-8 shadow-sm ${color === "emerald" ? "bg-emerald-50 text-emerald-600" : color === "blue" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"}`}
 		>
 			{icon}
 		</div>
-		<h3 className="text-xl font-heading font-black text-slate-900 mb-4 tracking-tight">
+		<h3 className="text-2xl font-heading font-bold text-foreground mb-4 tracking-tight group-hover:text-primary transition-colors">
 			{title}
 		</h3>
-		<p className="text-slate-500 font-medium leading-relaxed text-sm mb-6">
+		<p className="text-muted-foreground font-medium leading-relaxed text-sm mb-6">
 			{desc}
 		</p>
-		<div className="flex items-center gap-2 text-[9px] font-black text-primary uppercase tracking-widest">
-			<FiCheckCircle /> Activated
-		</div>
 	</div>
 );
 

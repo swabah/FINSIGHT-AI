@@ -10,10 +10,12 @@ import Analytics from "./pages/Analytics";
 
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { SEO } from "./components/SEO";
 
 function App() {
 	return (
 		<Router>
+			<SEO />
 			<Routes>
 				{/* Public */}
 				<Route path="/"         element={<Landing />} />

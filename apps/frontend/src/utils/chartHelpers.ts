@@ -54,3 +54,33 @@ export const getCategoryData = (transactions: any[], type: "expense" | "income" 
     colors: sortedCategories.map((c) => c[1].color),
   };
 };
+
+export const getAnnualData = (transactions: any[]) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const labels: string[] = [];
+  
+  // Get last 4 years
+  for (let i = 3; i >= 0; i--) {
+    labels.push(`${currentYear - i}`);
+  }
+
+  const incomeData = [0, 0, 0, 0];
+  const expenseData = [0, 0, 0, 0];
+
+  transactions.forEach((t) => {
+    const date = new Date(t.date);
+    const yearDiff = currentYear - date.getFullYear();
+    
+    if (yearDiff >= 0 && yearDiff < 4) {
+      const index = 3 - yearDiff;
+      if (t.type === "income") {
+        incomeData[index] += t.amount;
+      } else if (t.type === "expense") {
+        expenseData[index] += t.amount;
+      }
+    }
+  });
+
+  return { labels, incomeData, expenseData };
+};

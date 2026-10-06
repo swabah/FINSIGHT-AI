@@ -8,24 +8,25 @@
   --font-heading: "Inter", sans-serif;
   --font-sans: "Geist Sans", system-ui, sans-serif;
 
-  /* ── Echo Light Palette ── */
-  --color-background: #fdfdfd;   /* Off-white base */
-  --color-foreground: #09090b;   /* Almost black text */
+  /* ── Organic Soft Palette ── */
+  --color-background: #eef0f3;   /* Very soft cool gray background */
+  --color-foreground: #1c1c21;   /* Soft black */
   --color-card: #ffffff;         /* Pure white cards */
-  --color-secondary: #f4f4f5;    /* Zinc-100 surfaces */
-  --color-muted: #f4f4f5;       
-  --color-muted-foreground: #71717a; /* Zinc-500 subtle text */
-  --color-accent: #f4f4f5;       /* Zinc-100 hover */
-  --color-accent-foreground: #18181b;
-  --color-primary: #84cc16;      /* Echo Green (Lime 500) */
+  --color-secondary: #f4f5f7;    /* Light gray surfaces */
+  --color-muted: #f4f5f7;       
+  --color-muted-foreground: #8a8d9a; /* Soft text */
+  --color-accent: #f0fdf4;       /* Soft green hover */
+  --color-accent-foreground: #14532d;
+  --color-primary: #059669;      /* Emerald 600 - Organic green */
   --color-primary-foreground: #ffffff;
   --color-destructive: #ef4444; 
   --color-destructive-foreground: #ffffff;
-  --color-border: #e4e4e7;       /* Zinc-200 borders */
-  --color-input: #ffffff;        /* Pure white input */
-  --color-ring: #84cc16;         /* Echo Green ring */
+  --color-border: transparent;   /* We use shadows mostly now, not harsh borders */
+  --color-input: #ffffff;
+  --color-ring: #059669;
 
-  /* ── Radii (Softer & Rounder) ── */
+  /* ── Radii (Pill-like & Organic) ── */
+  --radius-3xl: 2rem;
   --radius-2xl: 1.5rem;
   --radius-xl: 1rem;
   --radius-lg: 0.75rem;
@@ -34,30 +35,30 @@
 }
 
 @layer base {
-  * {
-    @apply border-border/100 outline-ring/50;
-  }
   body {
     @apply bg-background text-foreground antialiased font-sans selection:bg-primary/20 selection:text-primary font-normal;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-heading tracking-tight font-medium;
+  }
+  input, select, textarea {
+    @apply border-zinc-200; /* Fallback for inputs */
   }
 }
 
 /* ── Custom Utilities ── */
 @utility modern-card {
-  @apply bg-card border border-border/60 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)];
+  @apply bg-card rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.03)];
 }
 
 @utility glass-panel {
-  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-sm;
+  @apply bg-white/70 backdrop-blur-xl shadow-sm;
 }
 
 @utility hover-lift {
   @apply transition-all duration-300;
   &:hover {
-    @apply shadow-md -translate-y-[2px] border-border;
+    @apply shadow-[0_12px_40px_rgb(0,0,0,0.06)] -translate-y-1;
   }
 }
 
@@ -68,7 +69,7 @@
 @keyframes subtle-fade {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -76,27 +77,15 @@
   }
 }
 
-/* ── Background Gradients ── */
-.echo-gradient-bg {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50vw;
-  height: 50vh;
-  background: radial-gradient(circle at top right, rgba(132, 204, 22, 0.15) 0%, rgba(253, 253, 253, 0) 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* ── Custom Scrollbar ── */
 @layer base {
   ::-webkit-scrollbar {
-    @apply w-1.5;
+    @apply w-0.5 h-0.5 sm:w-1 sm:h-1;
   }
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-200 rounded-full hover:bg-zinc-300 transition-colors;
+    @apply bg-zinc-200/50 rounded-full hover:bg-zinc-300 transition-colors;
   }
 }

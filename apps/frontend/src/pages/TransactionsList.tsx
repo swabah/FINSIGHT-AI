@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import ConfirmModal from "../components/ConfirmModal";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,6 +9,8 @@ import {
 	FiSearch,
 	FiTrash2,
 	FiX,
+    FiCreditCard,
+    FiList
 } from "react-icons/fi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,6 +25,7 @@ import { getAuthData } from "../services/authService";
 interface Category {
 	_id: string;
 	name: string;
+    color_code?: string;
 }
 
 interface Transaction {
@@ -58,7 +62,7 @@ const TransactionsList = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Queries
-    const { data: txData } = useQuery({
+    const { data: txData, isPending: txLoading } = useQuery({
         queryKey: ["transactions"],
         queryFn: () => fetchTransactions(auth?.token || ""),
         enabled: !!auth?.token,
@@ -142,8 +146,19 @@ const TransactionsList = () => {
         );
     }, [txData, search]);
 
+    if (txLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-32 opacity-80 animate-fade-up">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse mb-6">
+                    <FiList size={32} />
+                </div>
+                <p className="text-sm font-medium tracking-wide text-muted-foreground">Loading history...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6 pb-20">
+        <div className="space-y-10 pb-20 relative">
             <ConfirmModal
                 isOpen={!!confirmDeleteId}
                 onClose={() => setConfirmDeleteId(null)}
@@ -154,105 +169,118 @@ const TransactionsList = () => {
                 variant="danger"
             />
 
-            {/* ── Toolbar ── */}
-            <div className="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center p-5 bg-card border border-border/60 rounded-2xl shadow-sm">
-                <div className="flex-1 max-w-lg relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                        <FiSearch size={16} />
+            <div className="relative z-10 space-y-8 animate-fade-up">
+                {/* ── Header ── */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-4xl font-normal tracking-tight text-foreground">
+                            Transaction <span className="font-semibold">History</span>
+                        </h1>
+                        <p className="text-muted-foreground text-sm mt-2 font-medium">Review, add, and manage your financial records.</p>
                     </div>
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by description or category..."
-                        className="w-full h-11 pl-11 pr-4 bg-white border border-border/60 rounded-xl text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-medium text-foreground placeholder:opacity-40 shadow-sm shadow-black/5"
-                    />
                 </div>
-                <div className="flex gap-2">
-                    <button type="button" className="h-11 px-5 bg-white border border-border/60 rounded-xl text-xs font-semibold hover:border-border transition-all flex items-center gap-2 text-foreground shadow-sm shadow-black/5">
-                        <FiDownload size={14} /> Export
-                    </button>
-                    <button
-                        type="button"
-                        onClick={openAdd}
-                        className="h-11 px-6 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-sm shadow-primary/20"
-                    >
-                        <FiPlus size={14} /> Add Transaction
-                    </button>
-                </div>
-            </div>
 
-            {/* ── Ledger Table ── */}
-            <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-accent/40 border-b border-border/60 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4">Description</th>
-                                <th className="px-6 py-4 text-right">Amount</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/60 bg-white">
-                            {filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-20 text-center text-sm text-muted-foreground font-medium">
-                                        No transactions found matching your criteria.
-                                    </td>
-                                </tr>
-                            ) : (
-                                filtered.map((t: Transaction) => (
-                                    <tr key={t._id} className="group hover:bg-accent/40 transition-colors">
-                                        <td className="px-6 py-4 text-sm font-semibold text-foreground">
-                                            {new Date(t.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">
-                                            <span className="px-2 py-0.5 bg-accent/60 border border-border rounded font-bold text-muted-foreground">
-                                                {typeof t.category === "object" ? t.category.name : t.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground font-medium truncate max-w-[200px]">{t.description || "—"}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className={`text-sm font-bold ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
+                {/* ── Toolbar ── */}
+                <div className="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center p-6 modern-card">
+                    <div className="flex-1 max-w-lg relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                            <FiSearch size={18} />
+                        </div>
+                        <input
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search descriptions or categories..."
+                            className="w-full h-12 pl-12 pr-4 bg-secondary rounded-full text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-foreground placeholder:opacity-50 border-none"
+                        />
+                    </div>
+                    <div className="flex gap-3">
+                        <button type="button" className="h-12 px-6 bg-secondary rounded-full text-sm font-semibold hover:bg-zinc-200 transition-all flex items-center gap-2 text-foreground">
+                            <FiDownload size={16} /> Export
+                        </button>
+                        <button
+                            type="button"
+                            onClick={openAdd}
+                            className="h-12 px-8 bg-primary text-primary-foreground rounded-full text-sm font-semibold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-[0_8px_20px_rgba(5,150,105,0.2)] hover-lift"
+                        >
+                            <FiPlus size={16} /> Add Entry
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Ledger List View ── */}
+                <div className="modern-card p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-6 px-2">
+                        <h3 className="text-lg font-bold tracking-tight">All Transactions</h3>
+                        <div className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center text-muted-foreground">
+                            <FiList size={14} />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        {filtered.length === 0 ? (
+                            <div className="p-16 text-center text-sm text-muted-foreground font-medium">
+                                No transactions found matching your criteria.
+                            </div>
+                        ) : (
+                            filtered.map((t: Transaction) => (
+                                <div key={t._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-4 sm:px-6 hover:bg-secondary rounded-2xl transition-colors group cursor-default gap-3 sm:gap-0 border-b border-zinc-100 sm:border-none last:border-none">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm ${
+                                            t.type === "income" ? "text-primary bg-primary/10" : "text-zinc-600 bg-zinc-100"
+                                        }`}>
+                                            <FiCreditCard size={20} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-base font-bold text-foreground leading-none mb-2 truncate group-hover:text-primary transition-colors">{t.description || "Uncategorized Transaction"}</p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-[10px] font-semibold text-primary px-2 py-0.5 bg-primary/10 rounded-full inline-block truncate max-w-[100px]">
+                                                    {typeof t.category === "object" ? t.category.name : t.category}
+                                                </span>
+                                                <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                                                    {new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pl-16 sm:pl-0">
+                                        <div className="text-left sm:text-right">
+                                            <span className={`text-lg sm:text-base font-bold tracking-tight ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
                                                 {t.type === "income" ? "+" : "-"}₹{t.amount.toLocaleString()}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEdit(t)} className="p-2 bg-white text-muted-foreground hover:text-foreground border border-border shadow-sm hover:border-border/80 rounded-lg transition-all"><FiEdit2 size={13} /></button>
-                                                <button onClick={() => setConfirmDeleteId(t._id)} className="p-2 bg-white text-muted-foreground hover:text-red-500 border border-border shadow-sm hover:bg-red-500/5 hover:border-red-500/30 rounded-lg transition-all"><FiTrash2 size={13} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                        </div>
+                                        <div className="flex justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => openEdit(t)} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-zinc-100 text-muted-foreground hover:text-foreground shadow-sm rounded-full transition-all"><FiEdit2 size={14} /></button>
+                                            <button onClick={() => setConfirmDeleteId(t._id)} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-zinc-100 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 shadow-sm rounded-full transition-all"><FiTrash2 size={14} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* ── Add/Edit Modal ── */}
-            {modalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-card border border-border/50 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-up">
-                        <div className="p-6 border-b border-border/50 flex items-center justify-between">
-                            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                                {editingTx ? "Edit Transaction" : "New Transaction"}
+            {modalOpen && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[40px] w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.08)] overflow-hidden animate-fade-up">
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                {editingTx ? "Edit Entry" : "New Entry"}
                             </h2>
-                            <button onClick={closeModal} className="text-muted-foreground hover:text-foreground p-1 transition-all hover:bg-accent rounded-full"><FiX size={18} /></button>
+                            <button onClick={closeModal} className="text-muted-foreground hover:text-foreground w-10 h-10 flex items-center justify-center transition-all bg-[#f3f4f6] rounded-full"><FiX size={18} /></button>
                         </div>
                         
-                        <form onSubmit={handleSave} className="p-6 space-y-6">
-                            {error && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded text-center font-medium">{error}</div>}
+                        <form onSubmit={handleSave} className="p-8 pt-2 space-y-6">
+                            {error && <div className="p-4 bg-rose-50 text-rose-500 text-sm rounded-2xl text-center font-bold">{error}</div>}
 
-                            <div className="bg-input p-1 rounded flex border border-border">
+                            <div className="bg-[#f3f4f6] p-1.5 rounded-full flex">
                                 {(["expense", "income"] as const).map(type => (
                                     <button
                                         key={type}
                                         type="button"
                                         onClick={() => setForm(f => ({ ...f, type }))}
-                                        className={`flex-1 py-2 text-xs font-medium rounded transition-all ${form.type === type ? "bg-primary text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
+                                        className={`flex-1 py-3 text-sm font-bold rounded-full transition-all ${form.type === type ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                     >
                                         {type.charAt(0).toUpperCase() + type.slice(1)}
                                     </button>
@@ -261,46 +289,46 @@ const TransactionsList = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Amount (₹)</Label>
+                                    <label className="text-[10px] font-bold text-muted-foreground mb-2 block uppercase tracking-widest">Amount (₹)</label>
                                     <input
                                         type="number"
                                         required
                                         value={form.amount}
                                         onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-                                        className="w-full h-11 px-4 bg-input border border-border rounded text-lg font-medium outline-none focus:border-primary/50 transition-all"
+                                        className="w-full h-14 px-5 bg-[#f3f4f6] rounded-[20px] text-base font-bold outline-none focus:ring-2 focus:ring-primary/20 transition-all border-none"
                                         placeholder="0.00"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</Label>
+                                        <label className="text-[10px] font-bold text-muted-foreground mb-2 block uppercase tracking-widest">Category</label>
                                         <select
                                             value={form.category}
                                             required
                                             onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                                            className="w-full h-11 bg-input border border-border rounded px-3 text-sm outline-none focus:border-primary/50 transition-all"
+                                            className="w-full h-14 bg-[#f3f4f6] rounded-[20px] px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold border-none"
                                         >
                                             <option value="">Select...</option>
                                             {categories.map((c: Category) => <option key={c._id} value={c._id}>{c.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Date</Label>
+                                        <label className="text-[10px] font-bold text-muted-foreground mb-2 block uppercase tracking-widest">Date</label>
                                         <input
                                             type="date"
                                             required
                                             value={form.date}
                                             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                                            className="w-full h-11 bg-input border border-border rounded px-4 text-sm outline-none focus:border-primary/50 transition-all"
+                                            className="w-full h-14 bg-[#f3f4f6] rounded-[20px] px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold border-none"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
+                                    <label className="text-[10px] font-bold text-muted-foreground mb-2 block uppercase tracking-widest">Description</label>
                                     <textarea
                                         value={form.description}
                                         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                        className="w-full p-4 bg-input border border-border rounded text-sm h-24 resize-none outline-none focus:border-primary/50 transition-all"
+                                        className="w-full p-5 bg-[#f3f4f6] rounded-[20px] text-sm h-28 resize-none outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium border-none"
                                         placeholder="Add more details..."
                                     />
                                 </div>
@@ -308,13 +336,13 @@ const TransactionsList = () => {
                             <button
                                 type="submit"
                                 disabled={saveMut.isPending}
-                                className="w-full h-12 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center shadow-sm"
+                                className="w-full h-14 bg-primary text-white rounded-full text-base font-bold hover:bg-primary/90 transition-all flex items-center justify-center shadow-[0_8px_20px_rgba(5,150,105,0.2)] hover-lift disabled:opacity-50"
                             >
                                 {saveMut.isPending ? "Processing..." : editingTx ? "Update Transaction" : "Save Transaction"}
                             </button>
                         </form>
                     </div>
-                </div>
+                </div>, document.body
             )}
         </div>
     );

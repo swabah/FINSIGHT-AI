@@ -28,6 +28,7 @@ import {
 	FiMessageSquare,
 	FiCpu,
 	FiCheck,
+	FiX,
 } from "react-icons/fi";
 import ExpensePieChart from "@/components/ExpensePieChart";
 import ReactMarkdown from "react-markdown";
@@ -124,7 +125,6 @@ const Chat: React.FC = () => {
 		onSuccess: (res) => {
 			const d = res.data;
 
-			// If this was a new conversation, set its ID
 			if (!activeConvId) {
 				setActiveConvId(d.conversation_id);
 			}
@@ -139,7 +139,6 @@ const Chat: React.FC = () => {
 			};
 			setMessages((prev) => [...prev, aiMsg]);
 
-			// Refresh conversation list sidebar
 			queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
 			if (d.message_type === "action_success") {
@@ -183,7 +182,6 @@ const Chat: React.FC = () => {
 		}
 	};
 
-	// ── Start new conversation ────────────────────────────────────────────────
 	const startNewConversation = () => {
 		setActiveConvId(null);
 		setMessages([]);
@@ -191,14 +189,12 @@ const Chat: React.FC = () => {
 		inputRef.current?.focus();
 	};
 
-	// ── Switch to existing conversation ──────────────────────────────────────
 	const openConversation = (conv: Conversation) => {
 		if (conv._id === activeConvId) return;
 		setActiveConvId(conv._id);
 		setMessages([]);
 	};
 
-	// ── Delete confirmation ───────────────────────────────────────────────────
 	const deleteMutation = useMutation({
 		mutationFn: ({ txId, logId }: { txId: string; logId?: string }) =>
 			confirmDelete(auth?.token || "", txId, logId),
@@ -222,7 +218,6 @@ const Chat: React.FC = () => {
 		},
 	});
 
-	// ── Rename Conversation ───────────────────────────────────────────────────
 	const renameConvMutation = useMutation({
 		mutationFn: ({ id, title }: { id: string; title: string }) =>
 			updateConversationTitle(auth?.token || "", id, title),
@@ -232,7 +227,6 @@ const Chat: React.FC = () => {
 		},
 	});
 
-	// ── Delete Conversation ───────────────────────────────────────────────────
 	const deleteConvMutation = useMutation({
 		mutationFn: (id: string) => deleteChatConversation(auth?.token || "", id),
 		onSuccess: (_, deletedId) => {
@@ -251,52 +245,36 @@ const Chat: React.FC = () => {
 	};
 
 	const isNewConversation = !activeConvId && messages.length === 0;
+	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
 	return (
-		<div className="flex h-full overflow-hidden animate-in fade-in duration-500 relative bg-background">
-			{/* Gradient Background Effect */}
-			<div className="echo-gradient-bg" />
+		<div className="flex h-[calc(100vh-64px)] md:h-full overflow-hidden animate-in fade-in duration-500 relative bg-[#eef0f3]">
+			{/* Glow Background */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+            {/* Floating History Button mapped to Global Mobile Navbar */}
+            <button 
+                onClick={() => setMobileSidebarOpen(true)}
+                className="lg:hidden fixed top-3 right-20 z-[60] w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-sm"
+            >
+                <FiMessageSquare size={18} />
+            </button>
 
 			{/* ── Main Active Chat Area (Center) ── */}
-			<div className="flex-1 flex flex-col min-w-0 relative z-10">
-				{/* Top Bar */}
-				<header className="h-14 px-6 border-b border-border flex items-center justify-between shrink-0 bg-white/50 backdrop-blur-md">
-					<div className="flex items-center gap-2 min-w-0">
-						<span className="text-sm font-semibold truncate text-foreground">
-							{activeConvId
-								? (conversations.find((c) => c._id === activeConvId)?.title ??
-									"Conversation")
-								: "FinSight AI Connect"}
-						</span>
-					</div>
-					<div className="flex items-center gap-3 shrink-0">
-						<span className="flex items-center gap-1.5 px-3 py-1 bg-white border border-border rounded-full shadow-sm text-xs text-foreground font-medium">
-							<div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-							Echo Model Active
-						</span>
-						{/* Mobile: New Chat Button */}
-						<button
-							type="button"
-							onClick={startNewConversation}
-							className="lg:hidden flex items-center gap-1 h-8 px-3 bg-white border border-border text-foreground hover:bg-accent rounded-full text-xs font-semibold transition-all shadow-sm"
-						>
-							<FiPlus size={12} /> New
-						</button>
-					</div>
-				</header>
-
+			<div className="flex-1 flex flex-col min-w-0 relative z-10 pt-4 lg:pt-10">
+				
 				{/* Messages Area */}
-				<div className="flex-1 overflow-y-auto px-4 md:px-8 pb-36 pt-6">
+				<div className="flex-1 overflow-y-auto px-4 md:px-8 pb-36">
 					{/* Empty state */}
 					{isNewConversation ? (
 						<EmptyState onSuggestion={send} />
 					) : loadingMessages ? (
 						<div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground animate-pulse">
 							<FiLoader size={24} />
-							<p className="text-sm">Loading conversation...</p>
+							<p className="text-sm font-medium">Loading conversation...</p>
 						</div>
 					) : (
-						<div className="max-w-3xl mx-auto space-y-6">
+						<div className="max-w-3xl mx-auto space-y-8">
 							{messages
 								.filter((m) => m.sender === "user" || m.sender === "ai")
 								.map((m) => (
@@ -315,14 +293,14 @@ const Chat: React.FC = () => {
 					)}
 				</div>
 
-				{/* Input Bar — Floating Pill */}
-				<div className="absolute bottom-0 inset-x-0 p-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-20 pointer-events-none">
+				{/* Input Bar */}
+				<div className="absolute bottom-0 inset-x-0 pt-10 pb-4 sm:pb-6 px-4 md:px-8 z-20 pointer-events-none bg-gradient-to-t from-[#eef0f3] via-[#eef0f3]/90 to-transparent">
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
 							send(input);
 						}}
-						className="max-w-4xl mx-auto bg-white border border-border/80 rounded-[2rem] shadow-lg shadow-black/5 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10 transition-all overflow-hidden pointer-events-auto flex items-center pl-6 pr-2 py-2 gap-3"
+						className="max-w-4xl mx-auto bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex items-center pl-4 sm:pl-6 pr-1.5 sm:pr-2 py-1.5 sm:py-2 gap-2 sm:gap-3 pointer-events-auto border border-zinc-100"
 					>
 						<textarea
 							ref={inputRef}
@@ -330,38 +308,48 @@ const Chat: React.FC = () => {
 							value={input}
 							onKeyDown={handleKeyDown}
 							onChange={(e) => setInput(e.target.value)}
-							placeholder={
-								activeConvId
-									? "Continue chatting..."
-									: "Start your request, and let FinSight handle everything"
-							}
-							className="flex-1 bg-transparent outline-none resize-none text-sm font-medium placeholder:text-muted-foreground/60 py-2 h-10 max-h-32"
+							placeholder="Start Conversation"
+							className="flex-1 bg-transparent outline-none resize-none text-[13px] sm:text-sm font-medium placeholder:text-muted-foreground/60 py-2 h-[36px] sm:h-[42px]"
 						/>
 						<button
 							type="submit"
 							disabled={!input.trim() || chatMutation.isPending}
-							className="h-10 w-10 shrink-0 flex items-center justify-center rounded-full bg-primary text-white hover:bg-lime-500 transition-all shadow-sm shadow-primary/20 disabled:opacity-30 disabled:cursor-not-allowed"
+							className="h-[36px] w-[36px] sm:h-[42px] sm:w-[42px] shrink-0 flex items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
 						>
-							<FiSend size={15} className="-ml-0.5" />
+							<FiSend className="-ml-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4" />
 						</button>
 					</form>
 				</div>
 			</div>
 
 			{/* ── Right: Conversation History Panel ── */}
-			<aside className="hidden lg:flex flex-col w-[300px] h-full bg-white/70 backdrop-blur-xl border-l border-border shrink-0 z-10 shadow-sm">
+			{/* Mobile Backdrop */}
+			{mobileSidebarOpen && (
+				<button 
+					type="button"
+					onClick={() => setMobileSidebarOpen(false)}
+					className="lg:hidden fixed inset-0 z-40 bg-zinc-900/40 backdrop-blur-sm cursor-default"
+				/>
+			)}
+			
+			<aside className={`fixed lg:relative top-0 right-0 h-full lg:h-[calc(100%-2rem)] w-[320px] bg-white lg:rounded-[32px] shadow-2xl lg:shadow-[0_8px_30px_rgb(0,0,0,0.03)] shrink-0 z-50 lg:z-10 flex flex-col p-2 my-0 lg:my-4 mr-0 lg:mr-4 transition-transform duration-300 ${mobileSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+				{/* Mobile close button */}
+				<div className="lg:hidden flex justify-end p-2 pb-0">
+					<button onClick={() => setMobileSidebarOpen(false)} className="p-2 rounded-full bg-secondary text-foreground"><FiX size={16} /></button>
+				</div>
+				
 				{/* Top CTA */}
-				<div className="p-5 border-b border-border/60">
+				<div className="p-4 pt-2 lg:pt-4">
 					<button
 						type="button"
-						onClick={startNewConversation}
-						className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-white border border-border shadow-sm hover:border-primary/30 hover:text-primary text-foreground text-sm font-semibold transition-all hover:shadow-[0_4px_12px_rgba(132,204,22,0.1)]"
+						onClick={() => { startNewConversation(); setMobileSidebarOpen(false); }}
+						className="w-full h-12 flex items-center justify-center gap-2 rounded-full bg-primary text-white shadow-[0_8px_20px_rgba(5,150,105,0.2)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.3)] hover:-translate-y-0.5 text-sm font-bold transition-all"
 					>
 						<FiPlus size={16} /> New Chat
 					</button>
 				</div>
 
-				<div className="px-5 pt-4 pb-2 flex items-center justify-between opacity-70">
+				<div className="px-5 pt-2 pb-2 flex items-center justify-between opacity-70">
 					<span className="text-[11px] font-bold text-muted-foreground tracking-widest uppercase">
 						Chat History
 					</span>
@@ -382,9 +370,6 @@ const Chat: React.FC = () => {
 							<p className="text-xs font-medium text-foreground">
 								No past chats.
 							</p>
-							<p className="text-[11px] text-muted-foreground mt-1">
-								Start a conversation!
-							</p>
 						</div>
 					) : (
 						conversations.map((conv) => (
@@ -393,7 +378,7 @@ const Chat: React.FC = () => {
 								className={`group relative w-full text-left px-4 py-3.5 rounded-2xl transition-all border ${
 									activeConvId === conv._id
 										? "bg-white border-primary shadow-[0_2px_10px_rgba(132,204,22,0.1)]"
-										: "bg-transparent border-transparent hover:bg-white/60 hover:border-border/60"
+										: "bg-transparent border-transparent hover:bg-zinc-50"
 								}`}
 							>
 								{editingConvId === conv._id ? (
@@ -406,17 +391,17 @@ const Chat: React.FC = () => {
 											value={editTitle}
 											onChange={(e) => setEditTitle(e.target.value)}
 											onBlur={() => setEditingConvId(null)}
-											className="w-full text-[13px] font-semibold bg-background border border-border rounded px-2 py-1 outline-none focus:border-primary text-foreground"
+											className="w-full text-[13px] font-bold bg-background border border-border rounded px-2 py-1 outline-none focus:border-primary text-foreground"
 										/>
 									</form>
 								) : (
 									<button
 										type="button"
-										onClick={() => openConversation(conv)}
+										onClick={() => { openConversation(conv); setMobileSidebarOpen(false); }}
 										className="w-full text-left cursor-pointer"
 									>
 										<p
-											className={`text-[13px] pr-12 font-semibold truncate leading-tight ${activeConvId === conv._id ? "text-primary" : "text-foreground"}`}
+											className={`text-[13px] pr-12 font-bold truncate leading-tight ${activeConvId === conv._id ? "text-primary" : "text-foreground"}`}
 										>
 											{conv.title}
 										</p>
@@ -430,7 +415,7 @@ const Chat: React.FC = () => {
 
 								{/* Hover Actions */}
 								{!editingConvId && (
-									<div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+									<div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm px-1 py-1 rounded-lg">
 										<button
 											type="button"
 											onClick={(e) => {
@@ -480,7 +465,7 @@ const EmptyState = ({
 	onSuggestion: (s: string) => void;
 }) => {
 	const auth = getAuthData();
-	const firstName = auth?.user?.username?.split(" ")[0] || "Trader";
+	const username = auth?.user?.username || "there";
 
 	const actionCards = [
 		{
@@ -504,42 +489,39 @@ const EmptyState = ({
 	];
 
 	return (
-		<div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-12 px-4 animate-fade-up">
+		<div className="max-w-4xl mx-auto flex flex-col items-center justify-start sm:justify-center min-h-[60vh] text-center space-y-6 sm:space-y-12 px-2 sm:px-4 animate-fade-up pt-4 sm:pt-10">
 			{/* Center Hero Icon */}
-			<div className="relative">
-				<div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full scale-150" />
-				<div className="relative w-20 h-20 bg-white shadow-xl shadow-primary/10 rounded-full flex items-center justify-center border-4 border-white">
-					<FiActivity size={32} className="text-primary" />
-				</div>
-			</div>
+			<div className="w-16 h-16 sm:w-24 sm:h-24 bg-white shadow-[0_12px_40px_rgba(5,150,105,0.15)] rounded-full flex items-center justify-center border-4 border-white">
+                <FiActivity className="text-primary w-6 h-6 sm:w-8 sm:h-8" />
+            </div>
 
-			<div className="space-y-4">
-				<h2 className="text-4xl font-semibold tracking-tight text-foreground">
-					Welcome, {firstName}
+			<div className="space-y-2 sm:space-y-4">
+				<h2 className="text-2xl sm:text-4xl font-heading font-medium tracking-tight text-foreground">
+					Welcome, {username}
 				</h2>
-				<p className="text-sm font-medium text-muted-foreground max-w-md mx-auto">
+				<p className="text-[13px] sm:text-sm font-medium text-muted-foreground max-w-md mx-auto">
 					Start by scripting a financial task, and let the smart ledger handle
 					your bookkeeping. Not sure where to begin?
 				</p>
 			</div>
 
 			{/* Large Action Cards exactly like 'EchoAI' */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5 w-full">
 				{actionCards.map((c) => (
 					<button
 						type="button"
 						key={c.title}
 						onClick={() => onSuggestion(c.prompt)}
-						className="p-6 text-left bg-white border border-border/60 hover:border-primary/30 rounded-2xl transition-all hover:shadow-[0_8px_30px_rgba(132,204,22,0.12)] hover:-translate-y-1 group flex flex-col gap-3 min-h-[160px]"
+						className="p-4 sm:p-8 text-left bg-white rounded-[24px] sm:rounded-[32px] hover:-translate-y-1 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-300 group flex flex-row md:flex-col items-center md:items-start gap-4 md:gap-0 justify-between min-h-[auto] md:min-h-[220px]"
 					>
-						<div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+						<div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#eef0f3] flex items-center justify-center text-primary group-hover:bg-primary/10 transition-colors">
 							{c.icon}
 						</div>
-						<div>
-							<h3 className="font-bold tracking-tight text-sm text-foreground mb-1">
+						<div className="md:mt-6 flex-1">
+							<h3 className="font-bold tracking-tight text-sm sm:text-base text-foreground sm:mb-2">
 								{c.title}
 							</h3>
-							<p className="text-xs text-muted-foreground leading-relaxed">
+							<p className="hidden sm:block text-sm text-muted-foreground leading-relaxed font-medium">
 								{c.desc}
 							</p>
 						</div>
@@ -552,11 +534,11 @@ const EmptyState = ({
 
 const ThinkingBubble = () => (
 	<div className="flex gap-4 max-w-3xl mx-auto">
-		<div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white shrink-0">
+		<div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-sm border border-primary/20">
 			<FiCpu size={14} />
 		</div>
-		<div className="bg-card border border-border px-4 py-3 rounded-xl rounded-tl-none text-sm italic text-muted-foreground flex items-center gap-2">
-			<span className="flex gap-1">
+		<div className="bg-white border border-border px-5 py-3.5 rounded-[1.25rem] rounded-tl-sm text-[13px] font-medium text-muted-foreground flex items-center gap-3 shadow-sm">
+			<span className="flex gap-1.5">
 				<span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.3s]" />
 				<span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]" />
 				<span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" />
@@ -577,26 +559,22 @@ const MessageBubble = ({
 }) => {
 	const isAi = m.sender === "ai";
 	return (
-		<div
-			className={`flex max-w-3xl mx-auto ${isAi ? "justify-start" : "justify-end"}`}
-		>
-			<div
-				className={`flex gap-3 max-w-[85%] ${isAi ? "flex-row" : "flex-row-reverse"}`}
-			>
+		<div className={`flex max-w-3xl mx-auto ${isAi ? "justify-start" : "justify-end"}`}>
+			<div className={`flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-[85%] w-full ${isAi ? "flex-row" : "flex-row-reverse"}`}>
 				{/* Avatar */}
 				<div
-					className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm border ${isAi ? "bg-primary text-white border-primary/20" : "bg-white text-foreground border-border"}`}
+					className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm border ${isAi ? "bg-primary text-white border-primary/20" : "bg-[#eef0f3] text-foreground border-border"}`}
 				>
 					{isAi ? <FiActivity size={14} /> : <FiUser size={14} />}
 				</div>
 
 				{/* Content */}
-				<div className="space-y-2 min-w-0">
+				<div className="space-y-2 min-w-0 text-left w-full sm:w-auto">
 					{/* Text bubble powered by Markdown */}
 					<div
-						className={`px-5 py-3.5 rounded-[1.25rem] text-[13px] font-medium leading-relaxed shadow-sm ${
+						className={`px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-[1.5rem] text-[13px] sm:text-[14px] font-medium leading-relaxed shadow-sm overflow-x-auto ${
 							isAi
-								? "bg-white border border-border/60 rounded-tl-sm text-foreground prose prose-sm max-w-none prose-p:my-1 prose-headings:font-bold prose-headings:mb-2 prose-headings:text-foreground prose-strong:font-bold prose-ul:my-1 prose-li:my-0.5"
+								? "bg-white border border-border/60 rounded-tl-sm text-foreground prose prose-sm max-w-none prose-p:my-1 prose-headings:font-bold prose-headings:mb-2 prose-headings:text-foreground prose-strong:font-bold prose-ul:my-1 prose-li:my-0.5 prose-table:overflow-x-auto prose-table:block"
 								: "bg-foreground text-background rounded-tr-sm"
 						}`}
 					>
@@ -621,8 +599,8 @@ const MessageBubble = ({
 
 					{/* Rich: action success badge */}
 					{isAi && m.type === "action_success" && (
-						<span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-							<FiCheck size={10} strokeWidth={3} /> Done
+						<span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+							<FiCheck size={12} strokeWidth={3} /> Done
 						</span>
 					)}
 
@@ -637,14 +615,6 @@ const MessageBubble = ({
 							))}
 						</div>
 					)}
-
-					{/* Timestamp */}
-					<p className="text-[10px] text-muted-foreground/50 px-1">
-						{new Date(m.timestamp).toLocaleTimeString([], {
-							hour: "2-digit",
-							minute: "2-digit",
-						})}
-					</p>
 				</div>
 			</div>
 		</div>
@@ -652,14 +622,14 @@ const MessageBubble = ({
 };
 
 const TxTable = ({ rows }: { rows: TransactionRow[] }) => (
-	<div className="overflow-hidden rounded-lg border border-border bg-card text-xs w-full">
-		<table className="w-full text-left">
+	<div className="overflow-x-auto rounded-2xl border border-border bg-white text-xs w-full shadow-sm mt-3 max-w-[85vw] sm:max-w-none">
+		<table className="w-full text-left min-w-[320px]">
 			<thead>
-				<tr className="bg-accent/50 border-b border-border">
-					{["Date", "Category", "Description", "Amount"].map((h) => (
+				<tr className="bg-[#eef0f3]/50 border-b border-border">
+					{["Date", "Category", "Desc.", "Amount"].map((h) => (
 						<th
 							key={h}
-							className="px-4 py-2 font-bold text-muted-foreground uppercase tracking-wider text-[10px]"
+							className="px-3 sm:px-5 py-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]"
 						>
 							{h}
 						</th>
@@ -668,21 +638,21 @@ const TxTable = ({ rows }: { rows: TransactionRow[] }) => (
 			</thead>
 			<tbody className="divide-y divide-border">
 				{rows.map((t) => (
-					<tr key={t._id} className="hover:bg-accent/20 transition-colors">
-						<td className="px-4 py-2.5 text-muted-foreground">
+					<tr key={t._id} className="hover:bg-zinc-50 transition-colors">
+						<td className="px-3 sm:px-5 py-3.5 font-medium text-muted-foreground whitespace-nowrap">
 							{new Date(t.date).toLocaleDateString("en-IN", {
 								month: "short",
 								day: "2-digit",
 							})}
 						</td>
-						<td className="px-4 py-2.5 font-medium text-primary">
+						<td className="px-3 sm:px-5 py-3.5 font-bold text-primary whitespace-nowrap">
 							{t.category}
 						</td>
-						<td className="px-4 py-2.5 truncate max-w-[130px]">
+						<td className="px-3 sm:px-5 py-3.5 font-medium min-w-[120px]">
 							{t.description}
 						</td>
 						<td
-							className={`px-4 py-2.5 font-medium text-right ${t.type === "income" ? "text-emerald-500" : "text-foreground"}`}
+							className={`px-3 sm:px-5 py-3.5 font-bold text-right whitespace-nowrap ${t.type === "income" ? "text-emerald-500" : "text-foreground"}`}
 						>
 							{t.type === "income" ? "+" : "-"}₹{t.amount.toLocaleString()}
 						</td>
@@ -702,25 +672,25 @@ const DeleteConfirmCard = ({
 	onConfirm: (id: string) => void;
 	loading: boolean;
 }) => (
-	<div className="p-4 rounded-xl border border-rose-500/25 bg-rose-500/5 space-y-3">
-		<p className="text-xs font-medium text-rose-400">
-			Please confirm which transaction to delete:
+	<div className="p-5 rounded-2xl border border-rose-500/20 bg-rose-500/5 space-y-3 mt-3 shadow-sm">
+		<p className="text-xs font-bold text-rose-500 uppercase tracking-wide">
+			Confirm deletion:
 		</p>
 		{rows.map((t) => (
 			<div
 				key={t._id}
-				className="flex items-center justify-between p-3 bg-card border border-border rounded-lg gap-4"
+				className="flex items-center justify-between p-4 bg-white border border-rose-500/10 rounded-xl gap-4 shadow-sm"
 			>
 				<div className="min-w-0">
-					<p className="text-sm font-medium truncate">{t.description}</p>
-					<p className="text-[10px] text-muted-foreground mt-0.5">
+					<p className="text-sm font-bold truncate">{t.description}</p>
+					<p className="text-[11px] font-medium text-muted-foreground mt-1">
 						₹{t.amount} · {new Date(t.date).toLocaleDateString()}
 					</p>
 				</div>
 				<button
 					onClick={() => onConfirm(t._id)}
 					disabled={loading}
-					className="shrink-0 h-8 px-3 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-all disabled:opacity-50"
+					className="shrink-0 h-9 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50"
 				>
 					Delete
 				</button>
@@ -728,7 +698,5 @@ const DeleteConfirmCard = ({
 		))}
 	</div>
 );
-
-// Note: Custom renderText was replaced by proper ReactMarkdown implementation
 
 export default Chat;

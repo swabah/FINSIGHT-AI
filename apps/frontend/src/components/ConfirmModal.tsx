@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { FiX, FiAlertTriangle } from "react-icons/fi";
 
 interface ConfirmModalProps {
@@ -22,8 +23,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
 	if (!isOpen) return null;
 
-	return (
-		<div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
+	return createPortal(
+		<div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
 			{/* Backdrop */}
 			<button
 				type="button"
@@ -83,7 +84,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>, document.body
 	);
 };
 

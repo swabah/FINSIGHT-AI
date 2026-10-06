@@ -24,9 +24,10 @@ const createTransactionValidation = [
 		.withMessage("Type must be either 'income' or 'expense'"),
 	body("category").isMongoId().withMessage("Invalid category ID format"),
 	body("description")
+		.optional()
 		.trim()
-		.isLength({ min: 1, max: 500 })
-		.withMessage("Description must be between 1 and 500 characters"),
+		.isLength({ max: 500 })
+		.withMessage("Description cannot exceed 500 characters"),
 	body("date")
 		.optional()
 		.isISO8601()
@@ -48,10 +49,10 @@ const updateTransactionValidation = [
 		.isMongoId()
 		.withMessage("Invalid category ID format"),
 	body("description")
-		.optional()
+		.optional({ checkFalsy: true })
 		.trim()
-		.isLength({ min: 1, max: 500 })
-		.withMessage("Description must be between 1 and 500 characters"),
+		.isLength({ max: 500 })
+		.withMessage("Description cannot exceed 500 characters"),
 	body("date")
 		.optional()
 		.isISO8601()

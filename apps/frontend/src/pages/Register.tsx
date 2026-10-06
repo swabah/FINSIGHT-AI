@@ -28,7 +28,7 @@ const Register: React.FC = () => {
 			const response = await register(regData);
 			if (response.success && response.data) {
 				setAuthData(response.data);
-				navigate("/dashboard");
+				navigate("/chat");
 			}
 		} catch (err: any) {
 			setError(err.message || "Registration failed. Please try again.");
@@ -38,14 +38,14 @@ const Register: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans animate-in fade-in duration-500">
+		<div className="min-h-screen bg-[#eef0f3] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans animate-in fade-in duration-500">
 			<div className="sm:mx-auto sm:w-full sm:max-w-md">
-				<div className="bg-card py-8 px-8 border border-border rounded-xl space-y-6 shadow-2xl">
+				<div className="bg-white py-10 px-8 rounded-[32px] space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.03)] border-none">
 					<div className="text-center">
-						<div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary mb-4 ring-1 ring-primary/20">
+						<div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-white mb-6 shadow-[0_8px_20px_rgba(5,150,105,0.2)]">
 							<FiActivity size={24} />
 						</div>
-						<h2 className="text-2xl font-semibold tracking-tight text-foreground">
+						<h2 className="text-3xl font-heading font-medium tracking-tight text-foreground">
 							Create account
 						</h2>
 						<p className="mt-1 text-sm text-muted-foreground font-medium">
