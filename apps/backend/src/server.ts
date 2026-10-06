@@ -2,7 +2,6 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 import { initializeVectorStore } from "./services/vectorStoreService.js";
@@ -25,35 +24,11 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // limit each IP to 100 requests per windowMs
-	standardHeaders: true,
-	legacyHeaders: false,
-	message: {
-		success: false,
-		message: "Too many requests, please try again later",
-	},
-});
-app.use(limiter);
-
-// Stricter rate limiting for auth endpoints
-const authLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
-	max: 10,
-	message: {
-		success: false,
-		message: "Too many authentication attempts, please try again later",
-	},
-});
-
 // CORS configuration
 const allowedOrigins = [
 	"http://localhost:5173",
 	"http://localhost:5174",
 	"http://localhost:5175",
-	"https://finsight-ai-frontend-ivory.vercel.app",
 	process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -88,7 +63,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // API Routes
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/analytics", analyticsRoutes);
