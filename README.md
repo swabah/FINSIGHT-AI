@@ -94,7 +94,8 @@ VECTOR_SEARCH_INDEX_NAME=vector_index
 **Frontend (`/frontend/.env`)**
 Create a `.env` file in the `frontend` directory:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api # Local development
+# In production, this should be: https://finsight-ai-ca52.onrender.com/api
 ```
 
 ### 3. Run the Development Servers
